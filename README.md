@@ -4,7 +4,7 @@
 
 ####1. 与其他微服务交互：
 
-TaskDash接收其他微服务任务注册请求，存储微服务任务信息，请求方式为tcp请求，详细请求结构参考如下：
+TaskDash接收其他微服务任务注册请求，存储微服务任务信息，请求方式为tcp请求，请求结构参考如下：
 
 #####任务属性结构体定义：
     type TaskDash struct {
@@ -18,14 +18,15 @@ TaskDash接收其他微服务任务注册请求，存储微服务任务信息，
     	StartTime		string 	`json:"start_time"`  //任务开始时间
     	StopTime		string 	`json:"stop_time"`   //任务结束时间
     }
-    
+  
+#####流程：   
 建立tcp连接：连接TaskDash服务 -> 连接成功 -> 发送心跳 -> end
     
 注册：请求注册 -> TaskDash处理注册 -> 响应注册结果 -> end
 
 更新：请求更新 -> TaskDash处理更新 -> 响应更新结果 -> end
 
-查询：请求更新 -> TaskDash处理更新 -> 响应更新结果 -> end
+查询：请求查询 -> TaskDash处理查询 -> 响应查询结果 -> end
 
 心跳：若长时间未收到心跳请求，TaskDash认为当前的连接已经终止，更新任务状态为shutdown，待重新连接后查询状态更新数据库
 
@@ -47,15 +48,15 @@ GroupID：mx
 | ID   | Name | URL | User | GroupID | Description |Status  |StartTime  |StopTime   |
 |------|------|-----|------|---------|-------------|--------|-----------|-----------|
 | 133  | zxf  | ?   | ssx  | mx      | ?           |running |2020.07.01 |2020.07.05 |
-| 132  | lxq  | ?   | ssx  | mx      | ?           |finish  |2020.07.16 |2020.07.27 |            
+| 132  | lxq  | ?   | ssx  | mx      | ?           |finish  |2020.07.16 |2020.07.27 |
 | 131  | lb   | ?   | ssx  | mx      | ?           |shutdown|2020.07.03 |2020.07.06 |
 | 130  | zgl  | ?   | ssx  | mx      | ?           |restart |2020.07.04 |2020.07.15 |
 | 137  | zy   | ?   | ssx  | mx      | ?           |running |2020.07.15 |2020.07.18 |
 
 同时也支持其他前端扩展，待定。
 
-####3. 内部逻辑处理
-#####用户组管理结构定义
+####3. 用户组管理
+#####用户组管理结构定义：
     type TaskGroup struct {
     	ID		        string 	`json:"id"`          //任务id(唯一标识)
     	Name 			string 	`json:"name"`        //任务名称
@@ -63,13 +64,17 @@ GroupID：mx
     	User	 		string 	`json:"user"`        //任务所属用户
     	GroupID 		string 	`json:"group_id"`    //任务所属组
     }
+    
+每一个任务ID在存储时都对应一个User和GroupID，主要用于权限管理，前端用户只可以查询得到自己权限范围内的任务列表
+
+具体关联如下：ID/User/GroupID
 
 ### 二.接口说明
 
 #####1.注册请求
     @title       ReqRegister
     @network     tcp请求
-    @package        
+    @pack
         MessageID:  int 2
         Header:     map[string]interface{} {"RequestID" : "Register"}
         Body:       json {"id":"1234567","name":"abc","url":"http://localhost:8080/v1/task","user":"wsg","group_id":"mx","description":"add data","status":"running","start_time":"12:00","stop_time":"18:00"}
@@ -77,13 +82,13 @@ GroupID：mx
 #####2.注册响应
     @title       RespRegister
     @network     tcp请求
-    @package    
+    @pack
         body        json {"id":"1234567","errid":0,"errmsg":"正确"}
     
 #####3.更新请求
     @title       ReqUpdate
     @network     tcp请求
-    @package        
+    @pack     
         MessageID:  int 2
         Header:     map[string]interface{} {"RequestID" : "Update"}
         Body:       json {"id":"1234567","name":"abc","url":"http://localhost:8080/v1/task","user":"wsg","group_id":"mx","description":"add data","status":"running","start_time":"12:00","stop_time":"18:00"}
@@ -91,13 +96,13 @@ GroupID：mx
 #####4.更新响应
     @title       RespUpdate
     @network     tcp请求
-    @package    
+    @pack
         body        json {"id":"1234567","errid":0,"errmsg":"正确"}
     
 #####5.查找请求
     @title       ReqFind
     @network     tcp请求
-    @package        
+    @pack    
         MessageID:  int 2
         Header:     map[string]interface{} {"RequestID" : "Find"}
         Body:       json {"id":"1234567"}
@@ -105,14 +110,14 @@ GroupID：mx
 #####6.查找响应
     @title       RespFind
     @network     tcp请求
-    @package    
+    @pack
         body        json {{"id":"1234567","name":"abc","url":"http://localhost:8080/v1/task","user":"wsg","group_id":"mx","description":"add data","status":"running","start_time":"12:00","stop_time":"18:00"},"errid":0,"errmsg":"正确"}
     
 
 #####7.心跳通知
     @title       Heartbeat
     @network     tcp请求
-    @package        
+    @pack   
         MessageID:  int 1392
         Header:     nil
         Body:       nil

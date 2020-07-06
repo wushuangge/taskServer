@@ -24,21 +24,6 @@ func InitRedis() error{
 	return nil
 }
 
-//func newLoginRedisClient() (redis.Conn) {
-//	c ,err := redis.Dial("tcp",config.GetLoginRedisAddr())
-//	if err != nil {
-//		fmt.Println("connect redis error :",err)
-//		return nil
-//
-//	}
-//	if _, err := c.Do("AUTH", config.GetLoginRedisPassword()); err != nil {
-//		c.Close()
-//		return nil
-//	}
-//	return c
-//}
-
-
 func newLoginRedisClient(poolSize int) *redis.Client {
 	c := redis.NewClient(&redis.Options{
 		Addr:         config.GetLoginRedisAddr(),
