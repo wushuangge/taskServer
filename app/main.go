@@ -2,6 +2,7 @@ package main
 
 import "C"
 import (
+	"fmt"
 	"task/app/route"
 	"task/app/store"
 	"task/config"
@@ -16,7 +17,11 @@ func main() {
 	//初始化缓存
 	store.InitMemoryCache()
 	//初始化redis
-	store.InitRedis()
+	err := store.InitRedis()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	//开启httpserver
 	route.StartHttpServer()
 	//开启nsqserver

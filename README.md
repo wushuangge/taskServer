@@ -21,6 +21,7 @@
 
     type HeartBeat struct {
     	ID		        string 	`json:"id"`          //Service id(唯一标识)
+    	Time			string 	`json:"time"`        //发送心跳的时间
     	Reserved		string 	`json:"reserved"`    //预留
     }
 

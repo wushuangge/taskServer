@@ -1,78 +1,40 @@
 package nsq
 
 import (
-	"encoding/json"
-	"fmt"
+	"errors"
 	"github.com/nsqio/go-nsq"
 )
 
-func Test(){
-	SendHeartBeat()
-	SendTaskService()
+type NSQProducer struct {
+	p *nsq.Producer
 }
 
-//Service
-type TaskService struct {
-	ID				string 	`json:"id"`		     //Service id(唯一标识)
-	Name 			string 	`json:"name"`        //名称
-	Type        	string 	`json:"type"`        //类别
-	URL		        string 	`json:"url"`         //url
-	Description		string 	`json:"description"` //描述
+var producer *NSQProducer
+
+func InitNSQ(url string) error{
+	producer = new(NSQProducer)
+	producer.p = newNSQProducer(url)
+	if producer.p != nil {
+		return errors.New("init nsq err")
+	}
+	return nil
 }
 
-//HeartBeat
-type HeartBeat struct {
-	ID				string 	`json:"id"`		     //Service id(唯一标识)
+func StopNSQ()  {
+	if producer.p != nil {
+		producer.p.Stop()
+	}
 }
 
-func SendHeartBeat() {
-	url := "127.0.0.1:4150"
+func newNSQProducer(url string) *nsq.Producer {
 	producer, err := nsq.NewProducer(url, nsq.NewConfig())
 	if err != nil {
-		panic(err)
+		return nil
 	}
-
-	heartBeat := HeartBeat{
-		ID:				"1234567",
-	}
-
-	jsons, err := json.Marshal(heartBeat)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		fmt.Println("err : controllers - tool.go - StructI2json")
-	}
-	err = producer.Publish("heartBeat", []byte(jsons))
-	if err != nil {
-		panic(err)
-	}
-	producer.Stop()
+	return producer
 }
 
-func SendTaskService() {
-	url := "127.0.0.1:4150"
-	producer, err := nsq.NewProducer(url, nsq.NewConfig())
-	if err != nil {
-		panic(err)
-	}
-
-	taskService := TaskService{
-		ID:				"1234567",
-		Name: 			"abc",
-		Type:			"1",
-		URL: 			"http://localhost:8080/v1/task",
-		Description: 	"add data",
-	}
-
-	jsons, err := json.Marshal(taskService)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		fmt.Println("err : controllers - tool.go - StructI2json")
-	}
-	err = producer.Publish("taskService", []byte(jsons))
-	if err != nil {
-		panic(err)
-	}
-	producer.Stop()
+func Publish(topic string, body []byte) error {
+	err := producer.p.Publish(topic, body)
+	return err
 }

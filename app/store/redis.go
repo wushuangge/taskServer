@@ -18,7 +18,7 @@ var redisdb *RedisClient
 func InitRedis() error{
 	redisdb = new(RedisClient)
 	redisdb.c = newLoginRedisClient(100)
-	if redisdb.c != nil {
+	if redisdb.c == nil {
 		return errors.New("init redis err")
 	}
 	return nil
