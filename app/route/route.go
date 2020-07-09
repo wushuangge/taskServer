@@ -1,54 +1,19 @@
 package route
 
 import (
-	"fmt"
 	"github.com/facebookgo/grace/gracehttp"
-	"github.com/fwhezfwhez/tcpx"
 	"github.com/gin-gonic/gin"
+	"github.com/nsqio/go-nsq"
 	"log"
 	"net/http"
 	"os"
 	"runtime"
 	"strconv"
+	"sync"
 	"task/config"
 	"task/util"
 	"time"
 )
-
-func StartTcpxServer() {
-	srv := tcpx.NewTcpX(nil)
-	srv.BeforeExit(func() {
-		fmt.Println("server stops")
-	})
-
-	srv.OnClose = OnClose
-	srv.OnConnect = OnConnect
-	//srv.HeartBeatModeDetail(true, 10*time.Second, false, tcpx.DEFAULT_HEARTBEAT_MESSAGEID)
-	//心跳
-	srv.HeartBeatMode(true, 5*time.Second)
-	srv.RewriteHeartBeatHandler(tcpx.DEFAULT_HEARTBEAT_MESSAGEID, OnHeartBeat)
-	//用户池
-	srv.WithBuiltInPool(true)
-	//中间件
-	srv.UseGlobal(countRequestTime)
-	srv.AddHandler(1, getRequestTime)
-	srv.AddHandler(taskHandlerMessageID, taskHandler)
-
-	if config.IsDev() {
-		tcpx.SetLogMode(tcpx.DEBUG)
-	} else {
-		tcpx.SetLogMode(tcpx.RELEASE)
-	}
-
-	log.Println("tcp服务正在启动，监听端口:", util.GetLocalIp()+":8090", ",PID:", strconv.Itoa(os.Getpid()))
-	// tcp
-	go func() {
-		log.Println("tcp服务正在启动，监听端口:", util.GetLocalIp()+":8090", ",PID:", strconv.Itoa(os.Getpid()))
-		if e := srv.ListenAndServe("tcp", ":8090"); e != nil {
-			panic(e)
-		}
-	}()
-}
 
 func StartHttpServer()  {
 	//启动http服务
@@ -77,4 +42,23 @@ func StartHttpServer()  {
 			log.Fatal("服务器启动失败:", err.Error())
 		}
 	}()
+}
+
+func StartNsqServer(){
+	url := config.GetNsqAddr()
+	waiter := sync.WaitGroup{}
+	waiter.Add(1)
+
+	go func() {
+		defer waiter.Done()
+		config := nsq.NewConfig()
+		config.MaxInFlight=9
+
+		TaskService(url, config)
+		HeartBeat(url, config)
+
+		select{}
+	}()
+
+	waiter.Wait()
 }

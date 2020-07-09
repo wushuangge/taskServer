@@ -17,10 +17,10 @@ func main() {
 	store.InitMemoryCache()
 	//初始化redis
 	store.InitRedis()
-	//开启tcpserver
-	route.StartTcpxServer()
 	//开启httpserver
 	route.StartHttpServer()
+	//开启nsqserver
+	route.StartNsqServer()
 
 	select {}
 }

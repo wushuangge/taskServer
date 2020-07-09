@@ -1,43 +1,61 @@
 package route
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 func SetupHttp(r *gin.Engine)  {
 	v1 := r.Group("/v1")
 	{
-		v1.GET("/task", HandlePosts)
+		v1.GET("/task", HandleGets)
 	}
 
 	v2 := r.Group("/v2")
 	{
-		v2.POST("/task", HandleProcess)
+		v2.POST("/task", HandlePosts)
 	}
+}
+
+func HandleGets(c *gin.Context)  {
+	c.String(http.StatusOK, "Hello, gets")
 }
 
 func HandlePosts(c *gin.Context)  {
 	c.String(http.StatusOK, "Hello, posts")
 }
 
-func HandleSeries(c *gin.Context)  {
-	c.String(http.StatusOK, "Hello, series")
+func HttpPost(url string) (string, error){
+	resp, err := http.Post(url, "application/x-www-form-urlencoded",
+		strings.NewReader("name=cjb"))
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+
+	return string(body), err
 }
 
-func HandleProcess(c *gin.Context)  {
-	file, header, err := c.Request.FormFile("uploaded")
+func HttpPostWithCookie(url string, cookie string) (string, error) {
+	client := &http.Client{}
+
+	req, err := http.NewRequest("POST", url, strings.NewReader("name=cjb"))
 	if err != nil {
-		c.String(http.StatusBadRequest, "Bad request")
-		return
+		return "", err
 	}
-	data,err := ioutil.ReadAll(file)
-	if err ==nil{
-		c.String(http.StatusOK,string(data))
-	}
-	//文件的名称
-	filename := header.Filename
-	fmt.Println(file, err, filename)
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Cookie", cookie)
+
+	resp, err := client.Do(req)
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	return string(body), err
 }

@@ -2,72 +2,66 @@
 
 ### 一.架构说明
 
-####1. 与其他微服务交互：
+![avatar](./source/1.png)
 
-TaskDash接收其他微服务任务注册请求，存储微服务任务信息，请求方式为tcp请求，请求结构参考如下：
+####1. 与任务服务交互：
 
-#####任务属性结构体定义：
-    type TaskDash struct {
+任务服务通过push的方式将service信息push到nsq,服务管理模块通过pull的方式从nsq中取出服务信息，进行存储。
+
+    type TaskService struct {
+    	ID              string 	`json:"id"`          //Service id(唯一标识)
+    	Name            string 	`json:"name"`        //名称
+    	Type            string 	`json:"type"`        //类别
+    	URL             string 	`json:"url"`         //url
+    	Description     string 	`json:"description"` //描述
+    	Reserved        string 	`json:"reserved"`    //预留
+    }
+    
+任务服务通过push的方式将心跳信息push到nsq,服务管理模块通过pull的方式从nsq中取出心跳信息进行校验。
+
+    type HeartBeat struct {
+    	ID		        string 	`json:"id"`          //Service id(唯一标识)
+    	Reserved		string 	`json:"reserved"`    //预留
+    }
+
+任务元数据模块通过service信息GET/POST到任务服务，获取任务元数据，然后就行存储。
+
+    type TaskMetaData struct {
     	ID		        string 	`json:"id"`          //任务id(唯一标识)
-    	Name 			string 	`json:"name"`        //任务名称
-    	URL		        string 	`json:"url"`         //任务url
-    	User	 		string 	`json:"user"`        //任务所属用户
-    	GroupID 		string 	`json:"group_id"`    //任务所属组
+    	Name 			string 	`json:"name"`        //任务名字
+    	URL 			string 	`json:"url"`         //url
     	Description		string 	`json:"description"` //任务描述
     	Status			string 	`json:"status"`      //任务状态
-    	StartTime		string 	`json:"start_time"`  //任务开始时间
-    	StopTime		string 	`json:"stop_time"`   //任务结束时间
+    	Reserved		string 	`json:"reserved"`    //预留
     }
-  
-#####流程：   
-建立tcp连接：连接TaskDash服务 -> 连接成功 -> 发送心跳 -> end
-    
-注册：请求注册 -> TaskDash处理注册 -> 响应注册结果 -> end
-
-更新：请求更新 -> TaskDash处理更新 -> 响应更新结果 -> end
-
-查询：请求查询 -> TaskDash处理查询 -> 响应查询结果 -> end
-
-心跳：若长时间未收到心跳请求，TaskDash认为当前的连接已经终止，更新任务状态为shutdown，待重新连接后查询状态更新数据库
-
-具体请求方式详见下方接口说明
     
 ####2. 与任务管理前端交互：
 
-TaskDash也为前端提供任务管理信息显示，根据前端用户的权限（用户id，组id）来提供相关的任务信息列表。
+任务查询
 
-登录：前端用户登录 -> TaskDash请求认证授权 -> TaskDash根据认证授权结果返回登录成功or失败 -> end
-
-查询：前端用户请求查询任务 -> TaskDash判断前端用户是否已登录 -> TaskDash判断用户所属组 ->TaskDash查询数据库返回查询结果 -> end
+web前端先进行登录验证，然后通过GET/POST的方式从任务管理服务查询任务信息并显示。
 
 示例：
 User：ssx 
-GroupID：mx 
 前端查询任务返回如下：
 
-| ID   | Name | URL | User | GroupID | Description |Status  |StartTime  |StopTime   |
-|------|------|-----|------|---------|-------------|--------|-----------|-----------|
-| 133  | zxf  | ?   | ssx  | mx      | ?           |running |2020.07.01 |2020.07.05 |
-| 132  | lxq  | ?   | ssx  | mx      | ?           |finish  |2020.07.16 |2020.07.27 |
-| 131  | lb   | ?   | ssx  | mx      | ?           |shutdown|2020.07.03 |2020.07.06 |
-| 130  | zgl  | ?   | ssx  | mx      | ?           |restart |2020.07.04 |2020.07.15 |
-| 137  | zy   | ?   | ssx  | mx      | ?           |running |2020.07.15 |2020.07.18 |
+| ID   | Name | URL | Description |Status  |Reserved  |
+|------|------|-----|-------------|--------|----------|
+| 133  | zxf  | ?   | ?           |running |?         |
+| 132  | lxq  | ?   | ?           |finish  |?         |
+| 131  | lb   | ?   | ?           |shutdown|?         |
+| 130  | zgl  | ?   | ?           |restart |?         |
+| 137  | zy   | ?   | ?           |running |?         |
 
-同时也支持其他前端扩展，待定。
+用户进行任务领取（权限更高的用户可以进行任务分配），web前端向任务管理服务发送任务分配信息，
+任务管理服务将用户ID和任务ID进行绑定然后存储。
 
-####3. 用户组管理
-#####用户组管理结构定义：
-    type TaskGroup struct {
+    type TaskManager struct {
     	ID		        string 	`json:"id"`          //任务id(唯一标识)
-    	Name 			string 	`json:"name"`        //任务名称
-    	Addr 			string 	`json:"addr"`        //执行任务的微服务ip地址
-    	User	 		string 	`json:"user"`        //任务所属用户
-    	GroupID 		string 	`json:"group_id"`    //任务所属组
+    	User	 		string 	`json:"user"`        //用户
+    	GroupID 		string 	`json:"group_id"`    //组(预留)
+    	Reserved		string 	`json:"reserved"`    //预留
     }
-    
-每一个任务ID在存储时都对应一个User和GroupID，主要用于权限管理，前端用户只可以查询得到自己权限范围内的任务列表
-
-具体关联如下：ID/User/GroupID
 
 ### 二.接口说明
 

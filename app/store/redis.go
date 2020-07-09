@@ -41,7 +41,7 @@ func newLoginRedisClient(poolSize int) *redis.Client {
 	return c
 }
 
-func RegisterTask(key string, value []byte) string {
+func Set(key string, value []byte) string {
 	err := redisdb.c.Set(key, value, 0).Err()
 	if err != nil {
 		fmt.Println("error:", err)
@@ -50,22 +50,7 @@ func RegisterTask(key string, value []byte) string {
 	return "ok"
 }
 
-func UpdateTask(key string, value []byte) string {
-	res, err := redisdb.c.Get(key).Result()
-	if len(res) == 0{
-		return "id not exist"
-	}
-
-	err = redisdb.c.Set(key, value, 0).Err()
-	if err != nil {
-		fmt.Println("error:", err)
-		return err.Error()
-	}
-	SelectTask(key)
-	return "ok"
-}
-
-func SelectTask(key string) (string, error) {
+func Get(key string) (string, error) {
 	res, err := redisdb.c.Get(key).Result()
 	fmt.Println(res)
 	return res, err

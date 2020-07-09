@@ -39,6 +39,9 @@ type (
 		ProxyIp           string
 		ProxyPort         string
 		DirtyFilterServer string
+
+		//nsq
+		NsqAddr	string
 	}
 )
 
@@ -76,4 +79,8 @@ func GetMainMysqlDsn() string {
 
 func GetLogDir() string {
 	return envConf.LogDir
+}
+
+func GetNsqAddr() string {
+	return envConf.NsqAddr
 }
