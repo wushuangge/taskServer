@@ -13,7 +13,6 @@
     	Name            string 	`json:"name"`        //名称
     	Type            string 	`json:"type"`        //类别
     	URL             string 	`json:"url"`         //url
-    	Description     string 	`json:"description"` //描述
     	Reserved        string 	`json:"reserved"`    //预留
     }
     
@@ -21,7 +20,7 @@
 
     type HeartBeat struct {
     	ID		        string 	`json:"id"`          //Service id(唯一标识)
-    	Time			string 	`json:"time"`        //发送心跳的时间
+    	Time			int64 	`json:"time"`        //发送心跳的时间
     	Reserved		string 	`json:"reserved"`    //预留
     }
 
@@ -29,8 +28,7 @@
 
     type TaskMetaData struct {
     	ID		        string 	`json:"id"`          //任务id(唯一标识)
-    	Name 			string 	`json:"name"`        //任务名字
-    	URL 			string 	`json:"url"`         //url
+    	Type			string 	`json:"type"`        //类别
     	Description		string 	`json:"description"` //任务描述
     	Status			string 	`json:"status"`      //任务状态
     	Reserved		string 	`json:"reserved"`    //预留

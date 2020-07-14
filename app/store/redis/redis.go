@@ -1,4 +1,4 @@
-package store
+package redis
 
 import (
 	"errors"
@@ -9,7 +9,6 @@ import (
 	"task/config"
 )
 type RedisClient struct {
-	//c redis.Conn
 	c *redis.Client
 }
 
@@ -41,7 +40,7 @@ func newLoginRedisClient(poolSize int) *redis.Client {
 	return c
 }
 
-func Set(key string, value []byte) string {
+func Set(key string, value interface{}) string {
 	err := redisdb.c.Set(key, value, 0).Err()
 	if err != nil {
 		fmt.Println("error:", err)
@@ -54,4 +53,13 @@ func Get(key string) (string, error) {
 	res, err := redisdb.c.Get(key).Result()
 	fmt.Println(res)
 	return res, err
+}
+
+func Append(key string, value string) string {
+	err := redisdb.c.Append(key, value).Err()
+	if err != nil {
+		fmt.Println("error:", err)
+		return err.Error()
+	}
+	return "ok"
 }

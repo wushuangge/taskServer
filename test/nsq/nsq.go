@@ -11,10 +11,10 @@ type NSQProducer struct {
 
 var producer *NSQProducer
 
-func InitNSQ(url string) error{
+func InitNSQ(addr string) error{
 	producer = new(NSQProducer)
-	producer.p = newNSQProducer(url)
-	if producer.p != nil {
+	producer.p = newNSQProducer(addr)
+	if producer.p == nil {
 		return errors.New("init nsq err")
 	}
 	return nil

@@ -42,6 +42,12 @@ type (
 
 		//nsq
 		NsqAddr	string
+
+		//mongodb
+		MongoUserName string
+		MongoPassword string
+		MongoIp       string
+		MongoPort     string
 	}
 )
 
@@ -83,4 +89,20 @@ func GetLogDir() string {
 
 func GetNsqAddr() string {
 	return envConf.NsqAddr
+}
+
+func GetMongoUserName() string {
+	return envConf.MongoUserName
+}
+
+func GetMongoPassword() string {
+	return envConf.MongoPassword
+}
+
+func GetMongoIp() string {
+	return envConf.MongoIp
+}
+
+func GetMongoPort() string {
+	return envConf.MongoPort
 }

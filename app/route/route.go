@@ -1,6 +1,7 @@
 package route
 
 import (
+	"fmt"
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/gin-gonic/gin"
 	"github.com/nsqio/go-nsq"
@@ -39,23 +40,25 @@ func StartHttpServer()  {
 		}
 
 		if err != nil {
+			fmt.Println(err)
 			log.Fatal("服务器启动失败:", err.Error())
+			return
 		}
 	}()
 }
 
 func StartNsqServer(){
-	url := config.GetNsqAddr()
+	addr := config.GetNsqAddr()
 	waiter := sync.WaitGroup{}
 	waiter.Add(1)
-
+	serviceHeartBeat = make(map[string]int64)
 	go func() {
 		defer waiter.Done()
 		config := nsq.NewConfig()
 		config.MaxInFlight=9
 
-		TaskService(url, config)
-		HeartBeat(url, config)
+		TaskService(addr, config)
+		HeartBeat(addr, config)
 
 		select{}
 	}()

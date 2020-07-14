@@ -8,32 +8,35 @@ import (
 
 //Service
 type TaskService struct {
-	ID				string 	`json:"id"`		     //Service id(唯一标识)
-	Name 			string 	`json:"name"`        //名称
-	Type        	string 	`json:"type"`        //类别
-	URL		        string 	`json:"url"`         //url
-	Description		string 	`json:"description"` //描述
+	URL				string 	`json:"url"`         //url
+	Name			string 	`json:"name"`        //名称
+	Type			string 	`json:"type"`        //类别
+	Reserved		string 	`json:"reserved"`	 //预留
 }
 
 //HeartBeat
 type HeartBeat struct {
-	ID				string 	`json:"id"`		     //Service id(唯一标识)
+	URL				string 	`json:"url"`         //url
 	Time			int64 	`json:"time"`		 //发送心跳的时间
 	Reserved		string 	`json:"reserved"`	 //预留
 }
 
-func main() {
-	url := "127.0.0.1:4150"
-	nsq.InitNSQ(url)
 
+func main() {
+	addr := "192.168.51.12:4150"
+	err := nsq.InitNSQ(addr)
+	if err != nil {
+		panic(err)
+	}
 	PushHeartBeat()
 	PushTaskService()
+	nsq.StopNSQ()
 }
 
 func PushHeartBeat() {
 	now := time.Now().Unix() //获取时间戳
 	heartBeat := HeartBeat{
-		ID:				"123456",
+		URL: 			"http://localhost:8080/v2/test",
 		Time:			now,
 		Reserved:		"",
 	}
@@ -49,11 +52,10 @@ func PushHeartBeat() {
 
 func PushTaskService() {
 	taskService := TaskService{
-		ID:				"123456",
 		Name: 			"abc",
 		Type:			"1",
-		URL: 			"http://localhost:8080/v1/task",
-		Description: 	"add data",
+		URL: 			"http://localhost:8080/v2/test",
+		Reserved:		"",
 	}
 
 	jsons, err := json.Marshal(taskService)
