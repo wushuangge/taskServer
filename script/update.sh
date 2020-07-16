@@ -1,2 +1,2 @@
 #!/bin/bash
-git pull && rm -f videoServer && make && ./restart.sh
+git pull && rm -f taskdash && make && ./restart.sh

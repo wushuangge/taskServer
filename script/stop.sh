@@ -1,2 +1,2 @@
 cd `pwd`
-pidof ./videoServer | xargs kill
+pidof ./taskdash | xargs kill

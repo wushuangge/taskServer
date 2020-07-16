@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/nsqio/go-nsq"
-	"task/app/store/mongodb"
-	_struct "task/app/struct"
+	"taskdash/app/store/mongodb"
+	_struct "taskdash/app/struct"
 )
 
 type NSQTaskService struct {
@@ -18,34 +18,36 @@ type NSQHeartBeat struct {
 
 var serviceHeartBeat map[string]int64
 
-func TaskService(addr string, config *nsq.Config) {
+func TaskService(addr string, config *nsq.Config) error{
 	consumer, err := nsq.NewConsumer("taskService", "struggle", config)
 	if nil != err {
 		fmt.Println("err", err)
-		return
+		return err
 	}
 
 	consumer.AddHandler(&NSQTaskService{})
 	err = consumer.ConnectToNSQD(addr)
 	if nil != err {
 		fmt.Println("err", err)
-		return
+		return err
 	}
+	return err
 }
 
-func HeartBeat(url string, config *nsq.Config) {
+func HeartBeat(url string, config *nsq.Config) error {
 	consumer, err := nsq.NewConsumer("heartBeat", "struggle", config)
 	if nil != err {
 		fmt.Println("err", err)
-		return
+		return err
 	}
 
 	consumer.AddHandler(&NSQHeartBeat{})
 	err = consumer.ConnectToNSQD(url)
 	if nil != err {
 		fmt.Println("err", err)
-		return
+		return err
 	}
+	return err
 }
 
 func (this *NSQTaskService) HandleMessage(msg *nsq.Message) error {
@@ -56,17 +58,17 @@ func (this *NSQTaskService) HandleMessage(msg *nsq.Message) error {
 	if err!=nil{
 		return err
 	}
-	//save data
-	mongodb.InsertService(taskService);
-	//post
-	response, err := HttpPost(taskService.URL)
-	taskMetadata := _struct.TaskMetadata{}
-	err = json.Unmarshal([]byte(response),&taskMetadata)
-	if err!=nil{
-		return err
-	}
-	//save data
-	mongodb.InsertMetadata(taskMetadata);
+	//存在则更新，不存在则插入
+	mongodb.UpdateService(taskService);
+	////post
+	//response, err := HttpPost(taskService.URL)
+	//taskMetadata := _struct.TaskMetadata{}
+	//err = json.Unmarshal([]byte(response),&taskMetadata)
+	//if err!=nil{
+	//	return err
+	//}
+	////存在则更新，不存在则插入
+	//mongodb.UpdateMetadata(taskMetadata);
 	return nil
 }
 

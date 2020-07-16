@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"task/test/nsq"
+	"taskdash/test/nsq"
 	"time"
 )
 
@@ -21,7 +21,6 @@ type HeartBeat struct {
 	Reserved		string 	`json:"reserved"`	 //预留
 }
 
-
 func main() {
 	addr := "192.168.51.12:4150"
 	err := nsq.InitNSQ(addr)
@@ -36,9 +35,9 @@ func main() {
 func PushHeartBeat() {
 	now := time.Now().Unix() //获取时间戳
 	heartBeat := HeartBeat{
-		URL: 			"http://localhost:8080/v2/test",
+		URL: 			"http://localhost:8080/rpost/test",
 		Time:			now,
-		Reserved:		"",
+		Reserved:		"123",
 	}
 	jsons, err := json.Marshal(heartBeat)
 	if err != nil {
@@ -53,9 +52,9 @@ func PushHeartBeat() {
 func PushTaskService() {
 	taskService := TaskService{
 		Name: 			"abc",
-		Type:			"1",
-		URL: 			"http://localhost:8080/v2/test",
-		Reserved:		"",
+		Type:			"2",
+		URL: 			"http://localhost:8080/rpost/test",
+		Reserved:		"123",
 	}
 
 	jsons, err := json.Marshal(taskService)

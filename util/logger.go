@@ -5,8 +5,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"log"
-	"task/config"
 	"os"
+	"taskdash/config"
 	"time"
 )
 

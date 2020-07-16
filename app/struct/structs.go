@@ -17,19 +17,20 @@ type HeartBeat struct {
 
 //Metadata
 type TaskMetadata struct {
-	ID		        string 	`json:"id"`          //任务id(唯一标识)
-	Type			string 	`json:"type"`        //类别
-	Description		string 	`json:"description"` //任务描述
-	Status			string 	`json:"status"`      //任务状态
-	Reserved		string 	`json:"reserved"`    //预留
+	TaskID      	string `json:"task_id"`     //任务id(唯一标识)
+	Type        	string `json:"type"`   		//类别
+	Description 	string `json:"description"` //任务描述
+	Status      	string `json:"status"`      //任务状态
+	Reserved    	string `json:"reserved"`    //预留
 }
 
 //Manager
 type TaskManagement struct {
-	ID		        string 	`json:"id"`			 //任务id(唯一标识)
-	User	 		string 	`json:"user"`	 	 //用户
-	GroupID 		string 	`json:"group_id"`	 //组
-	Reserved		string 	`json:"reserved"`	 //预留
+	TaskID   		string `json:"task_id"`   //任务id(唯一标识)
+	Type     		string `json:"type"` 	   //类别
+	User     		string `json:"user"`      //用户
+	GroupID  		string `json:"group_id"`  //组
+	Reserved 		string `json:"reserved"`  //预留
 }
 
 //taskDash

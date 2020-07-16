@@ -6,7 +6,7 @@ import (
 	"time"
 	//"github.com/gomodule/redigo/redis"
 	"github.com/go-redis/redis"
-	"task/config"
+	"taskdash/config"
 )
 type RedisClient struct {
 	c *redis.Client

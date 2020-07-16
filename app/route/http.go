@@ -1,69 +1,58 @@
 package route
 
 import (
+	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/parnurzeal/gorequest"
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"task/app/store/mongodb"
-	_struct "task/app/struct"
+	_struct "taskdash/app/struct"
 )
 
-func SetupHttp(r *gin.Engine)  {
-	v1 := r.Group("/v1")
+func SetupHttp(g *gin.Engine)  {
+	rget := g.Group("/rget")
 	{
-		v1.GET("/task", HandleGetMetadata)
-		v1.GET("/test", HandleGetTest)
+		rget.GET("/task", HandleTask)
+		rget.GET("/test", HandleTest)
 	}
 
-	v2 := r.Group("/v2")
+	rpost := g.Group("/rpost")
 	{
-		v2.POST("/task", HandlePostMetadata)
-		v2.POST("/test", HandleGetTest)
+		rpost.POST("/task", HandleTask)
+		rpost.POST("/test", HandleTest)
 	}
 }
 
-func HandleGetMetadata(c *gin.Context)  {
-	response, err :=mongodb.QueryAllMetadata()
-	if err != nil {
-		c.String(http.StatusOK, err.Error())
+func HandleTask(c *gin.Context)  {
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+
+	switch c.Request.FormValue("operation") {
+	case "userLogin":
+		username := c.Request.FormValue("username")
+		password := c.Request.FormValue("password")
+		userIsExist := checkUser(username, password)
+		if userIsExist == true {
+			c.String(http.StatusOK, "success")
+		} else {
+			c.String(http.StatusOK, "failure")
+		}
+		break
+	default:
+		fmt.Println("default")
 	}
-	c.String(http.StatusOK, response)
 }
 
-func HandlePostMetadata(c *gin.Context)  {
-	response, err :=mongodb.QueryAllMetadata()
-	if err != nil {
-		c.String(http.StatusOK, err.Error())
-	}
-	c.String(http.StatusOK, response)
-}
-
-func HandleGetTest(c *gin.Context)  {
+func HandleTest(c *gin.Context)  {
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	taskMetadata := _struct.TaskMetadata{
-		ID: 			"sy-hn-1",
-		Type:			"1",
-		Description: 	"no",
-		Status:			"running",
-		Reserved:		"no",
-	}
-
-	jsons, err := json.Marshal(taskMetadata)
-
-	if err != nil {
-		c.String(http.StatusOK, err.Error())
-	}
-	c.String(http.StatusOK, string(jsons))
-}
-
-func HandlePostTest(c *gin.Context)  {
-	taskMetadata := _struct.TaskMetadata{
-		ID: 			"sy-hn-1",
-		Type:			"1",
-		Description: 	"no",
-		Status:			"running",
-		Reserved:		"no",
+		TaskID:      "sy-hn-2",
+		Type:        "2",
+		Description: "no",
+		Status:      "running",
+		Reserved:    "no",
 	}
 
 	jsons, err := json.Marshal(taskMetadata)
@@ -105,4 +94,14 @@ func HttpPostWithCookie(url string, cookie string) (string, error) {
 	body, err := ioutil.ReadAll(resp.Body)
 
 	return string(body), err
+}
+
+func checkUser(username string, password string) bool {
+	var userIsExist = false
+	request := gorequest.New().TLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+	resp, _, errs := request.Get("https://192.168.51.30:5001/auth").SetBasicAuth(username, password).Set("User-Agent", "ftp").End()
+	if len(errs) <= 0 && resp.StatusCode == 200 {
+		userIsExist = true
+	}
+	return userIsExist
 }

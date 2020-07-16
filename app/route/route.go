@@ -1,7 +1,6 @@
 package route
 
 import (
-	"fmt"
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/gin-gonic/gin"
 	"github.com/nsqio/go-nsq"
@@ -11,12 +10,12 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
-	"task/config"
-	"task/util"
+	"taskdash/config"
+	"taskdash/util"
 	"time"
 )
 
-func StartHttpServer()  {
+func StartHttpServer() error {
 	//启动http服务
 	log.Println("http服务正在启动，监听端口:", util.GetLocalIp()+":8080", ",PID:", strconv.Itoa(os.Getpid()))
 	r := gin.New()
@@ -26,8 +25,8 @@ func StartHttpServer()  {
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
+	var err error
 	go func() {
-		var err error
 		if runtime.GOOS == "windows" {
 			err = http.ListenAndServe(":8080", r)
 		} else {
@@ -40,28 +39,33 @@ func StartHttpServer()  {
 		}
 
 		if err != nil {
-			fmt.Println(err)
-			log.Fatal("服务器启动失败:", err.Error())
 			return
 		}
 	}()
+	return err
 }
 
-func StartNsqServer(){
+func StartNsqServer() error {
 	addr := config.GetNsqAddr()
 	waiter := sync.WaitGroup{}
 	waiter.Add(1)
 	serviceHeartBeat = make(map[string]int64)
+	var err error
 	go func() {
 		defer waiter.Done()
 		config := nsq.NewConfig()
 		config.MaxInFlight=9
 
-		TaskService(addr, config)
-		HeartBeat(addr, config)
-
+		err = TaskService(addr, config)
+		if err != nil {
+			return
+		}
+		err = HeartBeat(addr, config)
+		if err != nil {
+			return
+		}
 		select{}
 	}()
-
 	waiter.Wait()
+	return err
 }
