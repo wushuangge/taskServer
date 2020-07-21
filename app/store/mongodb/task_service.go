@@ -64,6 +64,18 @@ func QueryConditionService(key string, value interface{}) (string, error){
 func UpdateService(taskService _struct.TaskService) error {
 	update := bson.M{"$set": taskService}
 	updateOpts := options.Update().SetUpsert(true)
-	err := collMap["service"].UpdateOne(bson.M{"url": taskService.URL}, update, updateOpts)
+	err := collMap["service"].UpdateOne(bson.M{"_id": taskService.URL}, update, updateOpts)
 	return err
+}
+
+func TestInsertService(){
+	taskService := _struct.TaskService{
+		URL:      		"http://localhost:8080/rpost/test",
+		Name:        	"2",
+		Reserved:    	"",
+	}
+	UpdateService(taskService);
+
+	res,_ := QueryConditionService("url","http://localhost:8080/rpost/test")
+	fmt.Println(res)
 }

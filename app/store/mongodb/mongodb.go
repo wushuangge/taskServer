@@ -61,22 +61,8 @@ func InitMongoDB() error {
 	collMap = make(map[string]*Coll)
 
 	collMap["service"] = task.GetCollByName("service")
-	err = createIndex("url",collMap["service"])
-	if err != nil {
-		return err
-	}
-
 	collMap["metadata"] = task.GetCollByName("metadata")
-	err = createIndex("task_id",collMap["metadata"])
-	if err != nil {
-		return err
-	}
-
 	collMap["management"] = task.GetCollByName("management")
-	err = createIndex("task_id",collMap["management"])
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

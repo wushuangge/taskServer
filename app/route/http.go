@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"taskdash/app/store/mongodb"
 	_struct "taskdash/app/struct"
 )
 
@@ -28,7 +29,6 @@ func SetupHttp(g *gin.Engine)  {
 
 func HandleTask(c *gin.Context)  {
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-
 	switch c.Request.FormValue("operation") {
 	case "userLogin":
 		username := c.Request.FormValue("username")
@@ -37,8 +37,22 @@ func HandleTask(c *gin.Context)  {
 		if userIsExist == true {
 			c.String(http.StatusOK, "success")
 		} else {
-			c.String(http.StatusOK, "failure")
+			c.String(http.StatusOK, "error")
 		}
+		break
+	case "GetUnclaimedTasks":
+		response, err := mongodb.QueryConditionMetadata("status","notget")
+		if err != nil {
+			c.String(http.StatusOK, err.Error())
+		}
+		c.String(http.StatusOK, response)
+		break
+	case "GetUserTasks":
+		response, err := mongodb.QueryConditionManagement("user","zhangsan")
+		if err != nil {
+			c.String(http.StatusOK, err.Error())
+		}
+		c.String(http.StatusOK, response)
 		break
 	default:
 		fmt.Println("default")
@@ -49,8 +63,7 @@ func HandleTest(c *gin.Context)  {
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	taskMetadata := _struct.TaskMetadata{
 		TaskID:      "sy-hn-2",
-		Type:        "2",
-		Description: "no",
+		DataType:        "2",
 		Status:      "running",
 		Reserved:    "no",
 	}

@@ -27,3 +27,7 @@ func (coll *Coll) UpdateOne(filter interface{}, update interface{}, opts *option
 	return err
 }
 
+func (coll *Coll) FindPaging(ctx context.Context,filter interface{}, findoptions *options.FindOptions) (*mongo.Cursor, error) {
+	cursor, err := coll.collection.Find(ctx, filter, findoptions)
+	return cursor, err
+}

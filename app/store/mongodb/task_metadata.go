@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"strconv"
 	_struct "taskdash/app/struct"
 )
 
@@ -66,6 +67,24 @@ func QueryConditionMetadata(key string, value interface{}) (string, error){
 func UpdateMetadata(taskMetadata _struct.TaskMetadata) error {
 	update := bson.M{"$set": taskMetadata}
 	updateOpts := options.Update().SetUpsert(true)
-	err := collMap["metadata"].UpdateOne(bson.M{"task_id": taskMetadata.TaskID}, update, updateOpts)
+	err := collMap["metadata"].UpdateOne(bson.M{"_id": taskMetadata.TaskID}, update, updateOpts)
 	return err
+}
+
+func TestInsertMetadata(){
+	for i := 0; i < 20; i++ {
+		var tmp string
+		tmp = strconv.Itoa(i)
+		id := "sy-hn-" + tmp
+		taskMetadata := _struct.TaskMetadata{
+			TaskID:      id,
+			DataType:        "2",
+			Status:      "notget",
+			Reserved:    "",
+		}
+		UpdateMetadata(taskMetadata);
+	}
+
+	res,_ := QueryConditionMetadata("status","notget")
+	fmt.Println(res)
 }

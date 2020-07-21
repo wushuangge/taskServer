@@ -26,6 +26,8 @@ func main() {
 		log.Fatal("服务器启动失败:", err.Error())
 		return
 	}
+	//mongodb.TestInsertMetadata()
+	//mongodb.TestInsertManagement()
 	//开启httpserver
 	err = route.StartHttpServer()
 	if err != nil {
@@ -40,5 +42,6 @@ func main() {
 		log.Fatal("服务器启动失败:", err.Error())
 		return
 	}
+
 	select {}
 }
