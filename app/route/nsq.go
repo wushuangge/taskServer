@@ -1,6 +1,8 @@
 package route
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/nsqio/go-nsq"
@@ -16,6 +18,10 @@ type NSQHeartBeat struct {
 
 }
 
+type NSQUpdateStatus struct {
+
+}
+
 var serviceHeartBeat map[string]int64
 
 func TaskService(addr string, config *nsq.Config) error{
@@ -27,6 +33,22 @@ func TaskService(addr string, config *nsq.Config) error{
 
 	consumer.AddHandler(&NSQTaskService{})
 	err = consumer.ConnectToNSQD(addr)
+	if nil != err {
+		fmt.Println("err", err)
+		return err
+	}
+	return err
+}
+
+func UpdateStatus(url string, config *nsq.Config) error {
+	consumer, err := nsq.NewConsumer("updateStatus", "struggle", config)
+	if nil != err {
+		fmt.Println("err", err)
+		return err
+	}
+
+	consumer.AddHandler(&NSQUpdateStatus{})
+	err = consumer.ConnectToNSQD(url)
 	if nil != err {
 		fmt.Println("err", err)
 		return err
@@ -61,16 +83,39 @@ func (this *NSQTaskService) HandleMessage(msg *nsq.Message) error {
 	//存在则更新，不存在则插入
 	mongodb.UpdateService(taskService);
 	////post
-	//response, err := HttpPost(taskService.URL)
-	//taskMetadata := _struct.TaskMetadata{}
-	//err = json.Unmarshal([]byte(response),&taskMetadata)
-	//if err!=nil{
-	//	return err
-	//}
-	////存在则更新，不存在则插入
-	//mongodb.UpdateMetadata(taskMetadata);
+	response, err := HttpsPostForm(taskService.URL,"GetNewTasks","0")
+	var result []_struct.TaskFromService
+	err = json.Unmarshal([]byte(response),&result)
+	if err!=nil{
+		return err
+	}
+
+	for _, v := range result {
+		taskMetadata := _struct.TaskMetadata{}
+		taskMetadata.ID 		= GetMd5String(v.ProjectID + v.InstanceID + v.TaskID)
+		taskMetadata.ProjectID 	= v.ProjectID
+		taskMetadata.InstanceID = v.InstanceID
+		taskMetadata.TaskID 	= v.TaskID
+		taskMetadata.Status 	= v.Status
+		taskMetadata.CreateTime = v.CreateTime
+		taskMetadata.DataType 	= v.DataType
+		taskMetadata.Reserved 	= ""
+		//存在则更新，不存在则插入
+		mongodb.UpdateMetadata(taskMetadata);
+	}
 	return nil
 }
+
+func (this *NSQUpdateStatus) HandleMessage(msg *nsq.Message) error {
+	fmt.Println("receive UpdateStatus", msg.NSQDAddress, "message:", string(msg.Body))
+	taskFromService := _struct.TaskFromService{}
+	err := json.Unmarshal(msg.Body,&taskFromService)
+	if err!=nil{
+		return err
+	}
+	return nil
+}
+
 
 func (this *NSQHeartBeat) HandleMessage(msg *nsq.Message) error {
 	fmt.Println("receive NSQHeartBeat", msg.NSQDAddress, "message:", string(msg.Body))
@@ -81,4 +126,11 @@ func (this *NSQHeartBeat) HandleMessage(msg *nsq.Message) error {
 	}
 	serviceHeartBeat[heartBeat.URL] = heartBeat.Time
 	return nil
+}
+
+
+func GetMd5String(s string) string {
+	h := md5.New()
+	h.Write([]byte(s))
+	return hex.EncodeToString(h.Sum(nil))
 }

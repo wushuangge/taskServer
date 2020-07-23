@@ -1,9 +1,11 @@
 package route
 
 import (
+	"fmt"
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/gin-gonic/gin"
 	"github.com/nsqio/go-nsq"
+	"github.com/unrolled/secure"
 	"log"
 	"net/http"
 	"os"
@@ -25,6 +27,7 @@ func StartHttpServer() error {
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
+
 	var err error
 	go func() {
 		if runtime.GOOS == "windows" {
@@ -38,11 +41,33 @@ func StartHttpServer() error {
 			err = gracehttp.Serve(server)
 		}
 
+		//https
+		//r.Use(TlsHandler())
+		//err := r.RunTLS(":8080", "config/cert.pem", "config/key.pem")
+
 		if err != nil {
 			return
 		}
 	}()
+	fmt.Println(err)
 	return err
+}
+
+func TlsHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		secureMiddleware := secure.New(secure.Options{
+			SSLRedirect: true,
+			SSLHost:     "localhost:8080",
+		})
+		err := secureMiddleware.Process(c.Writer, c.Request)
+
+		// If there was an error, do not continue.
+		if err != nil {
+			return
+		}
+
+		c.Next()
+	}
 }
 
 func StartNsqServer() error {
@@ -57,6 +82,10 @@ func StartNsqServer() error {
 		config.MaxInFlight=9
 
 		err = TaskService(addr, config)
+		if err != nil {
+			return
+		}
+		err = UpdateStatus(addr, config)
 		if err != nil {
 			return
 		}

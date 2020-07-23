@@ -1,5 +1,9 @@
 package _struct
 
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
 //Service
 type TaskService struct {
 	URL				string 	`bson:"_id"`         	//url
@@ -16,19 +20,39 @@ type HeartBeat struct {
 
 //Metadata
 type TaskMetadata struct {
-	TaskID      	string `bson:"_id"`     		//任务id(唯一标识)
+	ID      		string `bson:"_id"`     		//联合id(唯一标识)
+	ProjectID  		string `bson:"project_id"`		//项目id
+	InstanceID 		string `bson:"instance_id"`		//实例id
+	TaskID     		string `bson:"task_id"`			//任务id
 	DataType        string `bson:"type"`   			//类别
 	Status      	string `bson:"status"`      	//任务状态
+	CreateTime 		int64  `bson:"time"`      	    //创建时间
 	Reserved    	string `bson:"reserved"`    	//预留
 }
 
 //Manager
 type TaskManagement struct {
-	TaskID   		string `bson:"_id"`   			//任务id(唯一标识)
+	ID      		string `bson:"_id"`     		//联合id(唯一标识)
+	ProjectID  		string `bson:"project_id"`		//项目id
+	InstanceID 		string `bson:"instance_id"`		//实例id
+	TaskID   		string `bson:"task_id"`   		//任务id(唯一标识)
 	DataType     	string `bson:"type"` 	  		//类别
 	Status      	string `bson:"status"`   	 	//任务状态
+	CreateTime 		int64  `bson:"time"`      	    //创建时间
 	User     		string `bson:"user"`      		//用户
 	Checker			string `bson:"checker"`   		//校验
 	Group	  		string `bson:"group"`  			//组
 	Reserved 		string `bson:"reserved"`  		//预留
 }
+
+type TaskFromService struct {
+	ID         primitive.ObjectID `bson:"_id"`
+	ProjectID  string
+	InstanceID string
+	TaskID     string
+	Status     string
+	DataType   string
+	EditInfo   map[string]string
+	CreateTime int64
+}
+

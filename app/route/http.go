@@ -8,6 +8,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"taskdash/app/store/mongodb"
 	_struct "taskdash/app/struct"
@@ -30,40 +31,26 @@ func SetupHttp(g *gin.Engine)  {
 func HandleTask(c *gin.Context)  {
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	switch c.Request.FormValue("operation") {
-	case "userLogin":
-		username := c.Request.FormValue("username")
-		password := c.Request.FormValue("password")
-		userIsExist := checkUser(username, password)
-		if userIsExist == true {
-			c.String(http.StatusOK, "success")
-		} else {
-			c.String(http.StatusOK, "error")
-		}
+	case "UserLogin":
+		c.String(http.StatusOK, userLogin(c.Request.FormValue("username"),
+			c.Request.FormValue("password")))
 		break
-	case "GetUnclaimedTasks":
-		response, err := mongodb.QueryConditionMetadata("status","notget")
-		if err != nil {
-			c.String(http.StatusOK, err.Error())
-		}
-		c.String(http.StatusOK, response)
+	case "GetTasksByStatus":
+		c.String(http.StatusOK, getTasksByStatus("status", c.Request.FormValue("status")))
 		break
-	case "GetUserTasks":
-		response, err := mongodb.QueryConditionManagement("user","zhangsan")
-		if err != nil {
-			c.String(http.StatusOK, err.Error())
-		}
-		c.String(http.StatusOK, response)
+	case "GetTasksByUser":
+		c.String(http.StatusOK, getTasksByUser("user", c.Request.FormValue("user")))
 		break
 	default:
-		fmt.Println("default")
+		fmt.Println(c.Request.FormValue("operation"))
 	}
 }
 
-func HandleTest(c *gin.Context)  {
+func HandleTest(c *gin.Context) {
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	taskMetadata := _struct.TaskMetadata{
 		TaskID:      "sy-hn-2",
-		DataType:        "2",
+		DataType:    "2",
 		Status:      "running",
 		Reserved:    "no",
 	}
@@ -76,7 +63,7 @@ func HandleTest(c *gin.Context)  {
 	c.String(http.StatusOK, string(jsons))
 }
 
-func HttpPost(url string) (string, error){
+func HttpPost(url string) (string, error) {
 	resp, err := http.Post(url, "application/x-www-form-urlencoded",
 		strings.NewReader("name=cjb"))
 	if err != nil {
@@ -85,28 +72,62 @@ func HttpPost(url string) (string, error){
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-
 	return string(body), err
 }
 
-func HttpPostWithCookie(url string, cookie string) (string, error) {
-	client := &http.Client{}
-
-	req, err := http.NewRequest("POST", url, strings.NewReader("name=cjb"))
+func HttpsPostForm(u string, operation string, createTime string) (string, error) {
+	formData := url.Values{
+		"operation":{operation},
+		"createTime":{createTime},
+	}
+	tr := &http.Transport{
+		TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
+		DisableCompression: true,
+	}
+	client := &http.Client{Transport: tr}
+	resp, err := client.PostForm(u, formData)
 	if err != nil {
 		return "", err
 	}
 
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Cookie", cookie)
-
-	resp, err := client.Do(req)
-
 	defer resp.Body.Close()
-
 	body, err := ioutil.ReadAll(resp.Body)
-
 	return string(body), err
+}
+
+func userLogin(username string, password string) string {
+	userIsExist := checkUser(username, password)
+	var result string
+	if userIsExist == true {
+		result = "success"
+	} else {
+		result = "error"
+	}
+	return result
+}
+
+func getTasksByStatus(key string, value interface{}) string {
+	response, err := mongodb.QueryConditionMetadata(key, value)
+	if err != nil {
+		return err.Error()
+	}
+	return response
+}
+
+func getTasksByUser(key string, value interface{}) string {
+	response, err := mongodb.QueryConditionManagement(key, value)
+	if err != nil {
+		return err.Error()
+	}
+	return response
+}
+
+func getPagingTasks(limit int64, skip int64, key string, value interface{}) string {
+	response, err := mongodb.QueryPagingMetadata(limit, skip, key, value)
+	if err != nil {
+		return err.Error()
+	}
+	return response
 }
 
 func checkUser(username string, password string) bool {

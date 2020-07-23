@@ -10,7 +10,6 @@ import (
 type TaskService struct {
 	URL				string 	`json:"url"`         //url
 	Name			string 	`json:"name"`        //名称
-	Type			string 	`json:"type"`        //类别
 	Reserved		string 	`json:"reserved"`	 //预留
 }
 
@@ -27,7 +26,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	PushHeartBeat()
+	//PushHeartBeat()
 	PushTaskService()
 	nsq.StopNSQ()
 }
@@ -35,7 +34,7 @@ func main() {
 func PushHeartBeat() {
 	now := time.Now().Unix() //获取时间戳
 	heartBeat := HeartBeat{
-		URL: 			"http://localhost:8080/rpost/test",
+		URL: 			"http://localhost:8080/rpost/task",
 		Time:			now,
 		Reserved:		"123",
 	}
@@ -51,10 +50,9 @@ func PushHeartBeat() {
 
 func PushTaskService() {
 	taskService := TaskService{
-		Name: 			"abc",
-		Type:			"2",
-		URL: 			"http://localhost:8080/rpost/test",
-		Reserved:		"123",
+		Name: 			"annotator",
+		URL: 			"https://192.168.51.33:8080/TaskDash/",
+		Reserved:		"",
 	}
 
 	jsons, err := json.Marshal(taskService)
