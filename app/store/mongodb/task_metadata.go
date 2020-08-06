@@ -2,38 +2,33 @@ package mongodb
 
 import (
 	"context"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"strconv"
 	_struct "taskdash/app/struct"
 	"time"
 )
 
-func InsertMetadata(taskMetadata _struct.TaskMetadata){
-	err :=collMap["metadata"].InsertOne(taskMetadata);
-	if err != nil {
-		fmt.Println(err)
-	}
+//insert
+func InsertMetadata(document interface{}) error {
+	err :=collMap["metadata"].InsertOne(document)
+	return err
 }
 
+//query all
 func QueryAllMetadata() (string, error){
-	cursor,err := collMap["metadata"].Find(bson.D{});
+	cursor,err := collMap["metadata"].Find(bson.D{})
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	if err := cursor.Err(); err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	var all = make([]interface{}, 0)
 
 	for cursor.Next(context.Background()) {
 		var taskMetadata _struct.TaskMetadata
-		if err = cursor.Decode(&taskMetadata); err != nil {
-			fmt.Println(err)
-		} else {
+		err = cursor.Decode(&taskMetadata)
+		if err == nil {
 			all = append(all, &taskMetadata)
 		}
 	}
@@ -41,23 +36,21 @@ func QueryAllMetadata() (string, error){
 	return Interfaces2json(all), nil
 }
 
-func QueryConditionMetadata(key string, value interface{}) (string, error){
-	cursor,err := collMap["metadata"].Find(bson.D{{key, value}});
+//condition query
+func QueryConditionMetadata2Json(filter interface{}) (string, error){
+	cursor,err := collMap["metadata"].Find(filter)
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	if err := cursor.Err(); err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	var all = make([]interface{}, 0)
 
 	for cursor.Next(context.Background()) {
 		var taskMetadata _struct.TaskMetadata
-		if err = cursor.Decode(&taskMetadata); err != nil {
-			fmt.Println(err)
-		} else {
+		err = cursor.Decode(&taskMetadata)
+		if err == nil {
 			all = append(all, &taskMetadata)
 		}
 	}
@@ -65,7 +58,28 @@ func QueryConditionMetadata(key string, value interface{}) (string, error){
 	return Interfaces2json(all), nil
 }
 
-//分页查询
+//condition query
+func QueryConditionMetadata2Interface(filter interface{}) ([]_struct.TaskMetadata, error){
+	var all = make([]_struct.TaskMetadata, 0)
+	cursor, err := collMap["metadata"].Find(filter)
+	if err != nil {
+		return all, err
+	}
+	if err := cursor.Err(); err != nil {
+		return all, err
+	}
+	for cursor.Next(context.Background()) {
+		var taskMetadata _struct.TaskMetadata
+		err = cursor.Decode(&taskMetadata)
+		if err == nil {
+			all = append(all, taskMetadata)
+		}
+	}
+	cursor.Close(context.Background())
+	return all, nil
+}
+
+//page query
 func QueryPagingMetadata(limit int64, skip int64, key string, value interface{}) (string, error){
 	ctx, cannel := context.WithTimeout(context.Background(), time.Minute)
 	defer cannel()
@@ -78,20 +92,17 @@ func QueryPagingMetadata(limit int64, skip int64, key string, value interface{})
 	//cursor, err := collMap["metadata"].FindPaging(ctx, bson.M{}, findoptions)
 	cursor, err := collMap["metadata"].FindPaging(ctx, bson.D{{key, value}}, findoptions)
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	if err := cursor.Err(); err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	var all = make([]interface{}, 0)
 
 	for cursor.Next(context.Background()) {
 		var taskMetadata _struct.TaskMetadata
-		if err = cursor.Decode(&taskMetadata); err != nil {
-			fmt.Println(err)
-		} else {
+		err = cursor.Decode(&taskMetadata)
+		if err == nil {
 			all = append(all, &taskMetadata)
 		}
 	}
@@ -99,27 +110,9 @@ func QueryPagingMetadata(limit int64, skip int64, key string, value interface{})
 	return Interfaces2json(all), nil
 }
 
-func UpdateMetadata(taskMetadata _struct.TaskMetadata) error {
-	update := bson.M{"$set": taskMetadata}
-	updateOpts := options.Update().SetUpsert(true)
-	err := collMap["metadata"].UpdateOne(bson.M{"_id": taskMetadata.ID}, update, updateOpts)
+//update
+func UpdateMetadata(filter interface{}, update interface{}, setUpsert bool) error {
+	updateOpts := options.Update().SetUpsert(setUpsert)
+	err := collMap["metadata"].UpdateOne(filter, update, updateOpts)
 	return err
-}
-
-func TestInsertMetadata(){
-	for i := 0; i < 20; i++ {
-		var tmp string
-		tmp = strconv.Itoa(i)
-		id := "sy-hn-" + tmp
-		taskMetadata := _struct.TaskMetadata{
-			TaskID:      id,
-			DataType:        "2",
-			Status:      "notget",
-			Reserved:    "",
-		}
-		UpdateMetadata(taskMetadata);
-	}
-
-	res,_ := QueryConditionMetadata("status","notget")
-	fmt.Println(res)
 }

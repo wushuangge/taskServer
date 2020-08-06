@@ -2,7 +2,6 @@ package mongodb
 
 import (
 	"encoding/json"
-	"fmt"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -27,9 +26,9 @@ type DB struct {
 }
 
 func Interface2json(i interface{}) string {
-	jsons, err := json.Marshal(i) //转换成JSON返回的是byte[]
+	jsons, err := json.Marshal(i)
 	if err != nil {
-		fmt.Println(err.Error())
+		return ""
 	}
 	return (string(jsons))
 }

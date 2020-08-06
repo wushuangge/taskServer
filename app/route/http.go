@@ -3,16 +3,26 @@ package route
 import (
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/parnurzeal/gorequest"
+	log "github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"taskdash/app/store/mongodb"
 	_struct "taskdash/app/struct"
+	"time"
 )
+
+const (
+	timeRatio = 10
+)
+
+var timeStamp int64 = 0
+var	mutex sync.Mutex
 
 func SetupHttp(g *gin.Engine)  {
 	rget := g.Group("/rget")
@@ -38,11 +48,17 @@ func HandleTask(c *gin.Context)  {
 	case "GetTasksByStatus":
 		c.String(http.StatusOK, getTasksByStatus("status", c.Request.FormValue("status")))
 		break
+	case "GetTasksNoUser":
+		c.String(http.StatusOK, getTasksNoUser())
+		break
 	case "GetTasksByUser":
-		c.String(http.StatusOK, getTasksByUser("user", c.Request.FormValue("user")))
+		c.String(http.StatusOK, getTasksByUser("user", c.Request.FormValue("username")))
+		break
+	case "TaskBind":
+		c.String(http.StatusOK,taskBind(c.Request.FormValue("id"), c.Request.FormValue("username")))
 		break
 	default:
-		fmt.Println(c.Request.FormValue("operation"))
+		log.Error("default!!! operation is ",c.Request.FormValue("operation"))
 	}
 }
 
@@ -50,7 +66,7 @@ func HandleTest(c *gin.Context) {
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	taskMetadata := _struct.TaskMetadata{
 		TaskID:      "sy-hn-2",
-		DataType:    "2",
+		TaskType:    "2",
 		Status:      "running",
 		Reserved:    "no",
 	}
@@ -107,7 +123,15 @@ func userLogin(username string, password string) string {
 }
 
 func getTasksByStatus(key string, value interface{}) string {
-	response, err := mongodb.QueryConditionMetadata(key, value)
+	response, err := mongodb.QueryConditionManagement(bson.D{{key, value}})
+	if err != nil {
+		return err.Error()
+	}
+	return response
+}
+
+func getTasksNoUser() string {
+	response, err := mongodb.QueryConditionManagement(bson.D{{"user", bson.M{"$exists": false}}})
 	if err != nil {
 		return err.Error()
 	}
@@ -115,15 +139,31 @@ func getTasksByStatus(key string, value interface{}) string {
 }
 
 func getTasksByUser(key string, value interface{}) string {
-	response, err := mongodb.QueryConditionManagement(key, value)
+	response, err := mongodb.QueryConditionManagement(bson.D{{key, value}})
 	if err != nil {
 		return err.Error()
 	}
 	return response
 }
 
+func taskBind(id string, user string) string {
+	filter :=bson.M{"_id": id}
+
+	update := bson.D{
+		{"$set", bson.D{
+			{"status", "已领取"},
+			{"user", user},
+		}},
+	}
+	err := mongodb.UpdateManagement(filter, update, false)
+	if err != nil {
+		return err.Error()
+	}
+	return "success"
+}
+
 func getPagingTasks(limit int64, skip int64, key string, value interface{}) string {
-	response, err := mongodb.QueryPagingMetadata(limit, skip, key, value)
+	response, err := mongodb.QueryPagingManagement(limit, skip, bson.D{{key, value}})
 	if err != nil {
 		return err.Error()
 	}
@@ -138,4 +178,33 @@ func checkUser(username string, password string) bool {
 		userIsExist = true
 	}
 	return userIsExist
+}
+
+func updateDB() {
+	now := time.Now().Unix()
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	diff := now - timeStamp
+ 	if diff > timeRatio{
+		taskService, err := mongodb.QueryAllService()
+		if err != nil{
+			timeStamp = now
+			return
+		}
+		for _, v := range taskService {
+			postFormToService(v.URL, timeStamp)
+		}
+	}
+	timeStamp = now
+}
+
+func LoadDB() {
+	taskService, err := mongodb.QueryAllService()
+	if err != nil{
+		return
+	}
+	for _, v := range taskService {
+		postFormToService(v.URL, 0)
+	}
 }

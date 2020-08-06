@@ -2,58 +2,54 @@ package mongodb
 
 import (
 	"context"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	_struct "taskdash/app/struct"
 )
 
-func InsertService(taskService _struct.TaskService) error{
-	err := collMap["service"].InsertOne(taskService);
+//insert
+func InsertService(document interface{}) error{
+	err := collMap["service"].InsertOne(document)
 	return err
 }
 
-func QueryAllService() (string, error){
-	cursor,err := collMap["service"].Find(bson.D{});
+//query all
+func QueryAllService() ([]_struct.TaskService, error){
+	var all = make([]_struct.TaskService, 0)
+	cursor,err := collMap["service"].Find(bson.D{})
 	if err != nil {
-		fmt.Println(err)
-		return "", err
+		return all, err
 	}
 	if err := cursor.Err(); err != nil {
-		fmt.Println(err)
-		return "", err
+		return all, err
 	}
-	var all = make([]interface{}, 0)
 
 	for cursor.Next(context.Background()) {
 		var taskService _struct.TaskService
-		if err = cursor.Decode(&taskService); err != nil {
-			fmt.Println(err)
-		} else {
-			all = append(all, &taskService)
+		err = cursor.Decode(&taskService);
+		if err == nil {
+			all = append(all, taskService)
 		}
 	}
 	cursor.Close(context.Background())
-	return Interfaces2json(all), nil
+	return all, nil
 }
 
+//condition query
 func QueryConditionService(key string, value interface{}) (string, error){
 	cursor,err := collMap["service"].Find(bson.D{{key, value}});
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	if err := cursor.Err(); err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	var all = make([]interface{}, 0)
 
 	for cursor.Next(context.Background()) {
 		var taskService _struct.TaskService
-		if err = cursor.Decode(&taskService); err != nil {
-			fmt.Println(err)
-		} else {
+		err = cursor.Decode(&taskService)
+		if err == nil {
 			all = append(all, &taskService)
 		}
 	}
@@ -61,21 +57,9 @@ func QueryConditionService(key string, value interface{}) (string, error){
 	return Interfaces2json(all), nil
 }
 
-func UpdateService(taskService _struct.TaskService) error {
-	update := bson.M{"$set": taskService}
-	updateOpts := options.Update().SetUpsert(true)
-	err := collMap["service"].UpdateOne(bson.M{"_id": taskService.URL}, update, updateOpts)
+//update
+func UpdateService(filter interface{}, update interface{}, setUpsert bool) error {
+	updateOpts := options.Update().SetUpsert(setUpsert)
+	err := collMap["service"].UpdateOne(filter, update, updateOpts)
 	return err
-}
-
-func TestInsertService(){
-	taskService := _struct.TaskService{
-		URL:      		"http://localhost:8080/rpost/test",
-		Name:        	"2",
-		Reserved:    	"",
-	}
-	UpdateService(taskService);
-
-	res,_ := QueryConditionService("url","http://localhost:8080/rpost/test")
-	fmt.Println(res)
 }

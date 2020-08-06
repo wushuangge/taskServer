@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/nsqio/go-nsq"
 	"github.com/unrolled/secure"
-	"log"
 	"net/http"
 	"os"
 	"runtime"
@@ -19,7 +18,7 @@ import (
 
 func StartHttpServer() error {
 	//启动http服务
-	log.Println("http服务正在启动，监听端口:", util.GetLocalIp()+":8080", ",PID:", strconv.Itoa(os.Getpid()))
+	fmt.Println("http服务正在启动，监听端口:", util.GetLocalIp()+":8080", ",PID:", strconv.Itoa(os.Getpid()))
 	r := gin.New()
 	SetupHttp(r)
 	if config.IsDev() {
@@ -27,7 +26,6 @@ func StartHttpServer() error {
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
-
 	var err error
 	go func() {
 		if runtime.GOOS == "windows" {
@@ -49,7 +47,6 @@ func StartHttpServer() error {
 			return
 		}
 	}()
-	fmt.Println(err)
 	return err
 }
 
@@ -81,7 +78,11 @@ func StartNsqServer() error {
 		config := nsq.NewConfig()
 		config.MaxInFlight=9
 
-		err = TaskService(addr, config)
+		err = ServiceRegister(addr, config)
+		if err != nil {
+			return
+		}
+		err = TaskRegister(addr, config)
 		if err != nil {
 			return
 		}

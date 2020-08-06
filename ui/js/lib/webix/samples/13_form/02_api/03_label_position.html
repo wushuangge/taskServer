@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" href="../../../codebase/webix.css?v=7.0.0" type="text/css"   charset="utf-8">
+		<script src="../../../codebase/webix.js?v=7.0.0" type="text/javascript" charset="utf-8"></script>
+		<style>
+			#areaA{
+				margin: 30px;
+			}
+		</style>
+		<title>Positioning Labels</title>
+	</head>
+	<body>
+
+		<div id="areaA"></div>
+	
+
+		<script type="text/javascript" charset="utf-8">
+		var form1 = [
+			{ view:"text",label:"Email"},
+
+		];
+
+
+		webix.ui({
+			container:"areaA",
+			margin:30, cols:[
+					{ view:"text",label:"Email"},
+
+				
+				
+			]
+		});
+		</script>
+	</body>
+</html>

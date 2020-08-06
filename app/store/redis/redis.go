@@ -2,7 +2,6 @@ package redis
 
 import (
 	"errors"
-	"fmt"
 	"time"
 	//"github.com/gomodule/redigo/redis"
 	"github.com/go-redis/redis"
@@ -43,7 +42,6 @@ func newLoginRedisClient(poolSize int) *redis.Client {
 func Set(key string, value interface{}) string {
 	err := redisdb.c.Set(key, value, 0).Err()
 	if err != nil {
-		fmt.Println("error:", err)
 		return err.Error()
 	}
 	return "ok"
@@ -51,14 +49,12 @@ func Set(key string, value interface{}) string {
 
 func Get(key string) (string, error) {
 	res, err := redisdb.c.Get(key).Result()
-	fmt.Println(res)
 	return res, err
 }
 
 func Append(key string, value string) string {
 	err := redisdb.c.Append(key, value).Err()
 	if err != nil {
-		fmt.Println("error:", err)
 		return err.Error()
 	}
 	return "ok"
