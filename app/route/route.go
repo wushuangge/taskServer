@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
+	"taskdash/app/controller"
 	"taskdash/config"
 	"taskdash/util"
 	"time"
@@ -26,13 +27,14 @@ func StartHttpServer() error {
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
+	addr := config.GetListenAddr()
 	var err error
 	go func() {
 		if runtime.GOOS == "windows" {
-			err = http.ListenAndServe(":8080", r)
+			err = http.ListenAndServe(addr, r)
 		} else {
 			server := &http.Server{
-				Addr:         ":8080",
+				Addr:         addr,
 				WriteTimeout: 20 * time.Second,
 				Handler:      r,
 			}
@@ -71,7 +73,7 @@ func StartNsqServer() error {
 	addr := config.GetNsqAddr()
 	waiter := sync.WaitGroup{}
 	waiter.Add(1)
-	serviceHeartBeat = make(map[string]int64)
+	controller.ServiceHeartBeat = make(map[string]int64)
 	var err error
 	go func() {
 		defer waiter.Done()

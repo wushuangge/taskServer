@@ -2,6 +2,7 @@ package main
 
 import (
 	log "github.com/sirupsen/logrus"
+	"taskdash/app/controller"
 	"taskdash/app/route"
 	"taskdash/app/store/mongodb"
 	"taskdash/config"
@@ -21,7 +22,7 @@ func main() {
 		return
 	}
 	//重新加载数据
-	route.LoadDB()
+	controller.LoadDB()
 	//开启httpserver
 	err = route.StartHttpServer()
 	if err != nil {

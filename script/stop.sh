@@ -1,2 +1,8 @@
+#!/bin/bash
 cd `pwd`
-pidof ./taskdash | xargs kill
+pid=`pidof taskdash`
+if [ "$pid" == "" ]; then
+    echo not start
+else
+    sudo docker-compose -f docker/docker-compose.yml stop
+fi

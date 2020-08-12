@@ -48,6 +48,9 @@ type (
 		MongoPassword string
 		MongoIp       string
 		MongoPort     string
+
+		//ListenAddr
+		ListenAddr string
 	}
 )
 
@@ -105,4 +108,8 @@ func GetMongoIp() string {
 
 func GetMongoPort() string {
 	return envConf.MongoPort
+}
+
+func GetListenAddr() string {
+	return envConf.ListenAddr
 }

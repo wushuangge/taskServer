@@ -1,0 +1,14 @@
+version: '2'
+
+services:
+  taskdash:
+    image: taskdash20200812
+    restart: always
+    hostname: taskdash
+    ports:
+      - "8080:8080"
+    networks:
+      - taskdash-network
+networks:
+  taskdash-network:
+    driver: bridge

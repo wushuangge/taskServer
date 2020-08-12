@@ -7,34 +7,22 @@ import (
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
-	"io/ioutil"
 	"net/http"
-	"net/url"
-	"strings"
-	"sync"
 	"taskdash/app/store/mongodb"
 	_struct "taskdash/app/struct"
-	"time"
 )
-
-const (
-	timeRatio = 10
-)
-
-var timeStamp int64 = 0
-var	mutex sync.Mutex
 
 func SetupHttp(g *gin.Engine)  {
-	rget := g.Group("/rget")
+	v1 := g.Group("/rget")
 	{
-		rget.GET("/task", HandleTask)
-		rget.GET("/test", HandleTest)
+		v1.GET("/task", HandleTask)
+		v1.GET("/test", HandleTest)
 	}
 
-	rpost := g.Group("/rpost")
+	v2 := g.Group("/rpost")
 	{
-		rpost.POST("/task", HandleTask)
-		rpost.POST("/test", HandleTest)
+		v2.POST("/task", HandleTask)
+		v2.POST("/test", HandleTest)
 	}
 }
 
@@ -77,38 +65,6 @@ func HandleTest(c *gin.Context) {
 		c.String(http.StatusOK, err.Error())
 	}
 	c.String(http.StatusOK, string(jsons))
-}
-
-func HttpPost(url string) (string, error) {
-	resp, err := http.Post(url, "application/x-www-form-urlencoded",
-		strings.NewReader("name=cjb"))
-	if err != nil {
-		return "", err
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	return string(body), err
-}
-
-func HttpsPostForm(u string, operation string, createTime string) (string, error) {
-	formData := url.Values{
-		"operation":{operation},
-		"createTime":{createTime},
-	}
-	tr := &http.Transport{
-		TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
-		DisableCompression: true,
-	}
-	client := &http.Client{Transport: tr}
-	resp, err := client.PostForm(u, formData)
-	if err != nil {
-		return "", err
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	return string(body), err
 }
 
 func userLogin(username string, password string) string {
@@ -178,33 +134,4 @@ func checkUser(username string, password string) bool {
 		userIsExist = true
 	}
 	return userIsExist
-}
-
-func updateDB() {
-	now := time.Now().Unix()
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	diff := now - timeStamp
- 	if diff > timeRatio{
-		taskService, err := mongodb.QueryAllService()
-		if err != nil{
-			timeStamp = now
-			return
-		}
-		for _, v := range taskService {
-			postFormToService(v.URL, timeStamp)
-		}
-	}
-	timeStamp = now
-}
-
-func LoadDB() {
-	taskService, err := mongodb.QueryAllService()
-	if err != nil{
-		return
-	}
-	for _, v := range taskService {
-		postFormToService(v.URL, 0)
-	}
 }

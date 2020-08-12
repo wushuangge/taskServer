@@ -1,10 +1,8 @@
 #!/bin/bash
 cd `pwd`
-pid=`pidof ./taskdash`
-cp -f nohup.out nohup.out.1
-cat /dev/null > nohup.out
+pid=`pidof taskdash`
 if [ "$pid" == "" ]; then
-    nohup ./taskdash &
+    sudo docker-compose -f docker/docker-compose.yml up -d
 else
-    kill -SIGUSR2 ${pid}
+    sudo docker-compose -f docker/docker-compose.yml restart
 fi

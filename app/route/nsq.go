@@ -1,13 +1,10 @@
 package route
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/nsqio/go-nsq"
 	log "github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/bson"
-	"taskdash/app/store/mongodb"
-	_struct "taskdash/app/struct"
+	"taskdash/app/controller"
 )
 
 type NSQServiceRegister struct {
@@ -21,8 +18,6 @@ type NSQUpdateStatus struct {
 
 type NSQHeartBeat struct {
 }
-
-var serviceHeartBeat map[string]int64
 
 func ServiceRegister(addr string, config *nsq.Config) error{
 	consumer, err := nsq.NewConsumer("serviceRegister", "struggle", config)
@@ -90,84 +85,25 @@ func HeartBeat(url string, config *nsq.Config) error {
 
 func (this *NSQServiceRegister) HandleMessage(msg *nsq.Message) error {
 	fmt.Println("recv NSQServiceRegister", string(msg.Body))
-
-	taskService := _struct.TaskService{}
-	err := json.Unmarshal(msg.Body,&taskService)
-	if err != nil{
-		log.Error(err)
-		return err
-	}
-
-	filter := bson.M{"_id": taskService.URL}
-	update := bson.M{"$set": taskService}
-	mongodb.UpdateService(filter, update, true)
-
-	postFormToService(taskService.URL, 0)
+	controller.ServiceRegister(msg.Body)
 	return nil
 }
 
 func (this *NSQTaskRegister) HandleMessage(msg *nsq.Message) error {
 	fmt.Println("recv NSQTaskRegister", string(msg.Body))
-	taskFromService := _struct.TaskFromService{}
-	err := json.Unmarshal(msg.Body,&taskFromService)
-	if err != nil{
-		log.Error(err)
-		return err
-	}
-
-	id := getMd5String(taskFromService.ProjectID +
-		taskFromService.InstanceID + taskFromService.TaskID + taskFromService.TaskType)
-
-	filter := bson.M{"_id": id}
-	update := bson.D{
-		{"$set", bson.D{
-			{"_id", id},
-			{"project_id", taskFromService.ProjectID},
-			{"instance_id", taskFromService.InstanceID},
-			{"task_id", taskFromService.TaskID},
-			{"status", taskFromService.Status},
-			{"time", taskFromService.CreateTime},
-			{"type", taskFromService.TaskType},
-			{"url", taskFromService.URL},
-		}},
-	}
-	mongodb.UpdateManagement(filter, update, true)
-
+	controller.TaskRegister(msg.Body)
 	return nil
 }
 
 func (this *NSQUpdateStatus) HandleMessage(msg *nsq.Message) error {
 	fmt.Println("recv NSQUpdateStatus", string(msg.Body))
-	taskFromService := _struct.TaskFromService{}
-	err := json.Unmarshal(msg.Body,&taskFromService)
-	if err != nil{
-		log.Error(err)
-		return err
-	}
-
-	id := getMd5String(taskFromService.ProjectID +
-		taskFromService.InstanceID + taskFromService.TaskID + taskFromService.TaskType)
-
-	filter := bson.M{"_id": id}
-	update := bson.D{
-		{"$set", bson.D{
-			{"status", taskFromService.Status},
-		}},
-	}
-	mongodb.UpdateManagement(filter, update, false)
-
+	controller.UpdateStatus(msg.Body)
 	return nil
 }
 
 func (this *NSQHeartBeat) HandleMessage(msg *nsq.Message) error {
 	fmt.Println("recv NSQHeartBeat",string(msg.Body))
-	heartBeat:=_struct.HeartBeat{}
-	err:=json.Unmarshal(msg.Body,&heartBeat)
-	if err != nil{
-		log.Error(err)
-		return err
-	}
-	serviceHeartBeat[heartBeat.URL] = heartBeat.Time
+	controller.HeartBeat(msg.Body)
 	return nil
 }
 

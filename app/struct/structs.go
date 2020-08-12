@@ -44,13 +44,14 @@ type TaskManagement struct {
 }
 
 type TaskFromService struct {
-	ID         		string `bson:"_id"`
-	ProjectID  		string
-	InstanceID 		string
-	TaskID     		string
-	Status     		string
-	TaskType   		string
-	URL        		string
-	EditInfo   		map[string]string
-	CreateTime 		int64
+	ID         string `bson:"_id"`
+	ProjectID  string
+	InstanceID string
+	TaskID     string
+	TaskType   string
+	Status     string
+	URL        string
+	EditInfo   string
+	CreateTime int64
+	Increment  int64
 }
