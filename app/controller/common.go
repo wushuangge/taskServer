@@ -80,6 +80,7 @@ func downloadTask(url string, increment int64){
 				{"time", v.CreateTime},
 				{"type", v.TaskType},
 				{"url", v.URL},
+				{"increment", v.Increment},
 			}},
 		}
 		err :=mongodb.UpdateManagement(filter, update, true)

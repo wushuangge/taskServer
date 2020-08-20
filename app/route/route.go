@@ -8,7 +8,6 @@ import (
 	"github.com/unrolled/secure"
 	"net/http"
 	"os"
-	"runtime"
 	"strconv"
 	"sync"
 	"taskdash/app/controller"
@@ -19,7 +18,8 @@ import (
 
 func StartHttpServer() error {
 	//启动http服务
-	fmt.Println("http服务正在启动，监听端口:", util.GetLocalIp()+":8080", ",PID:", strconv.Itoa(os.Getpid()))
+	addr := config.GetListenAddr()
+	fmt.Println("http服务正在启动，监听端口:", util.GetLocalIp()+addr, ",PID:", strconv.Itoa(os.Getpid()))
 	r := gin.New()
 	SetupHttp(r)
 	if config.IsDev() {
@@ -27,12 +27,12 @@ func StartHttpServer() error {
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	addr := config.GetListenAddr()
 	var err error
 	go func() {
-		if runtime.GOOS == "windows" {
-			err = http.ListenAndServe(addr, r)
-		} else {
+		if config.GetEnableHttps() {
+			r.Use(TlsHandler())
+			err = r.RunTLS(addr, "config/cert.pem", "config/key.pem")
+		}else {
 			server := &http.Server{
 				Addr:         addr,
 				WriteTimeout: 20 * time.Second,
@@ -40,11 +40,6 @@ func StartHttpServer() error {
 			}
 			err = gracehttp.Serve(server)
 		}
-
-		//https
-		//r.Use(TlsHandler())
-		//err := r.RunTLS(":8080", "config/cert.pem", "config/key.pem")
-
 		if err != nil {
 			return
 		}

@@ -24,6 +24,7 @@ type TaskMetadata struct {
 	URL        		string `bson:"url"` 	  		//url
 	Status      	string `bson:"status"`      	//任务状态
 	CreateTime 		int64  `bson:"time"`      	    //创建时间
+	Increment		int64  `bson:"increment"`      	//序列
 	Reserved    	string `bson:"reserved"`    	//预留
 }
 
@@ -40,6 +41,7 @@ type TaskManagement struct {
 	User     		string `bson:"user"`      		//用户
 	Checker			string `bson:"checker"`   		//校验
 	Group	  		string `bson:"group"`  			//组
+	Increment		int64  `bson:"increment"`      	//序列
 	Reserved 		string `bson:"reserved"`  		//预留
 }
 
@@ -51,7 +53,7 @@ type TaskFromService struct {
 	TaskType   string
 	Status     string
 	URL        string
-	EditInfo   string
+	ImgList    []string
 	CreateTime int64
 	Increment  int64
 }

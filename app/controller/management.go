@@ -30,6 +30,7 @@ func TaskRegister(data []byte) {
 			{"time", taskFromService.CreateTime},
 			{"type", taskFromService.TaskType},
 			{"url", taskFromService.URL},
+			{"increment", taskFromService.Increment},
 		}},
 	}
 	mongodb.UpdateManagement(filter, update, true)

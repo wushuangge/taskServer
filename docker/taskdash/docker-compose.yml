@@ -2,7 +2,7 @@ version: '2'
 
 services:
   taskdash:
-    image: taskdash20200812
+    image: taskdash_20200819
     restart: always
     hostname: taskdash
     ports:

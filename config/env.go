@@ -51,6 +51,9 @@ type (
 
 		//ListenAddr
 		ListenAddr string
+
+		//EnableHttps
+		EnableHttps bool
 	}
 )
 
@@ -112,4 +115,8 @@ func GetMongoPort() string {
 
 func GetListenAddr() string {
 	return envConf.ListenAddr
+}
+
+func GetEnableHttps() bool {
+	return envConf.EnableHttps
 }
