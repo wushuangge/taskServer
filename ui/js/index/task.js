@@ -1,20 +1,4 @@
 Task = {
-    GetUnclaimedTasks:function(){
-         var frameData = {
-            "operation":"GetTasksNoUser",
-            "status":"待领取"
-        };
-        var resData = AjaxTool.SendData(frameData,"/rpost/task");
-        
-        if (resData == ""){
-            resData = "[]"
-        }
-
-        var tasks = JSON.parse(resData);
-        tasks = this.initTasks(tasks);
-        return tasks
-        
-    },
     GetTasksByUser:function(){
         var frameData = {
             "operation":"GetTasksByUser"

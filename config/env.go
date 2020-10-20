@@ -1,8 +1,8 @@
 package config
 
 import (
-	"log"
 	"github.com/BurntSushi/toml"
+	"log"
 )
 
 type (
@@ -41,7 +41,7 @@ type (
 		DirtyFilterServer string
 
 		//nsq
-		NsqAddr	string
+		NsqAddr string
 
 		//mongodb
 		MongoUserName string
@@ -54,6 +54,10 @@ type (
 
 		//EnableHttps
 		EnableHttps bool
+
+		//certificate
+		CertPem string
+		KeyPem  string
 	}
 )
 
@@ -119,4 +123,12 @@ func GetListenAddr() string {
 
 func GetEnableHttps() bool {
 	return envConf.EnableHttps
+}
+
+func GetCertPem() string {
+	return envConf.CertPem
+}
+
+func GetKeyPem() string {
+	return envConf.KeyPem
 }

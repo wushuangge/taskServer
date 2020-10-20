@@ -1,51 +1,22 @@
 package route
 
 import (
+	"encoding/gob"
 	"fmt"
 	"github.com/facebookgo/grace/gracehttp"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/nsqio/go-nsq"
 	"github.com/unrolled/secure"
 	"net/http"
 	"os"
 	"strconv"
-	"sync"
-	"taskdash/app/controller"
+	_struct "taskdash/app/struct"
 	"taskdash/config"
 	"taskdash/util"
 	"time"
 )
-
-func StartHttpServer() error {
-	//启动http服务
-	addr := config.GetListenAddr()
-	fmt.Println("http服务正在启动，监听端口:", util.GetLocalIp()+addr, ",PID:", strconv.Itoa(os.Getpid()))
-	r := gin.New()
-	SetupHttp(r)
-	if config.IsDev() {
-		gin.SetMode(gin.DebugMode)
-	} else {
-		gin.SetMode(gin.ReleaseMode)
-	}
-	var err error
-	go func() {
-		if config.GetEnableHttps() {
-			r.Use(TlsHandler())
-			err = r.RunTLS(addr, "config/cert.pem", "config/key.pem")
-		}else {
-			server := &http.Server{
-				Addr:         addr,
-				WriteTimeout: 20 * time.Second,
-				Handler:      r,
-			}
-			err = gracehttp.Serve(server)
-		}
-		if err != nil {
-			return
-		}
-	}()
-	return err
-}
 
 func TlsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -64,16 +35,47 @@ func TlsHandler() gin.HandlerFunc {
 	}
 }
 
-func StartNsqServer() error {
-	addr := config.GetNsqAddr()
-	waiter := sync.WaitGroup{}
-	waiter.Add(1)
-	controller.ServiceHeartBeat = make(map[string]int64)
+func StartHttpServer() error {
+	//启动http服务
+	addr := config.GetListenAddr()
+	fmt.Println("http服务正在启动，监听端口:", util.GetLocalIp()+addr, ",PID:", strconv.Itoa(os.Getpid()))
+	gob.Register(_struct.User{})
+	r := gin.Default()
+	store := cookie.NewStore([]byte("mxsecret"))
+	r.Use(sessions.Sessions("session", store))
+	SetupHttp(r)
+	if config.IsDev() {
+		gin.SetMode(gin.DebugMode)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	var err error
 	go func() {
-		defer waiter.Done()
+		if config.GetEnableHttps() {
+			r.Use(TlsHandler())
+			err = r.RunTLS(addr, config.GetCertPem(), config.GetKeyPem())
+		} else {
+			server := &http.Server{
+				Addr:         addr,
+				WriteTimeout: 20 * time.Second,
+				Handler:      r,
+			}
+			err = gracehttp.Serve(server)
+		}
+		if err != nil {
+			return
+		}
+	}()
+	return err
+}
+
+func StartNsqServer() error {
+	addr := config.GetNsqAddr()
+	fmt.Println("nsq服务正在启动，监听端口:", util.GetLocalIp()+addr, ",PID:", strconv.Itoa(os.Getpid()))
+	var err error
+	go func() {
 		config := nsq.NewConfig()
-		config.MaxInFlight=9
+		config.MaxInFlight = 9
 
 		err = ServiceRegister(addr, config)
 		if err != nil {
@@ -91,8 +93,6 @@ func StartNsqServer() error {
 		if err != nil {
 			return
 		}
-		select{}
 	}()
-	waiter.Wait()
 	return err
 }

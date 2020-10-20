@@ -19,7 +19,7 @@ type NSQUpdateStatus struct {
 type NSQHeartBeat struct {
 }
 
-func ServiceRegister(addr string, config *nsq.Config) error{
+func ServiceRegister(addr string, config *nsq.Config) error {
 	consumer, err := nsq.NewConsumer("serviceRegister", "struggle", config)
 	if nil != err {
 		log.Error(err)
@@ -102,8 +102,7 @@ func (this *NSQUpdateStatus) HandleMessage(msg *nsq.Message) error {
 }
 
 func (this *NSQHeartBeat) HandleMessage(msg *nsq.Message) error {
-	fmt.Println("recv NSQHeartBeat",string(msg.Body))
+	fmt.Println("recv NSQHeartBeat", string(msg.Body))
 	controller.HeartBeat(msg.Body)
 	return nil
 }
-

@@ -62,7 +62,7 @@ services:
     networks:
       - mongo-network
     ports:
-      - "8081:8081"
+      - "27019:8081"
     environment:
       ME_CONFIG_OPTIONS_EDITORTHEME: 3024-night
       ME_CONFIG_MONGODB_SERVER: mongo
@@ -71,20 +71,50 @@ services:
       ME_CONFIG_BASICAUTH_USERNAME: root
       ME_CONFIG_BASICAUTH_PASSWORD: 123456
 
-  taskdash:
-    image: taskdash_20200820
-    depends_on:
-      - nsqlookupd
-      - nsqadmin
-      - nsqd
-      - mongo
-      - mongo-express
-    restart: always
-    hostname: taskdash
-    ports:
-      - "8080:8080"
-    networks:
-      - taskdash-network
+#  taskdash:
+#    image: taskdash0908
+#    depends_on:
+#      - nsqlookupd
+#      - nsqadmin
+#      - nsqd
+#      - mongo
+#      - mongo-express
+#    restart: always
+#    hostname: taskdash
+#    ports:
+#      - "8080:8080"
+#    networks:
+#      - taskdash-network
+#
+#  annotator:
+#    image: annotator0908
+#    depends_on:
+#      - nsqlookupd
+#      - nsqadmin
+#      - nsqd
+#      - mongo
+#      - mongo-express
+#    restart: always
+#    hostname: annotator
+#    ports:
+#      - "8081:8081"
+#    networks:
+#      - annotator-network
+#
+#  mapdeck:
+#    image: mapdeck0908
+#    depends_on:
+#      - nsqlookupd
+#      - nsqadmin
+#      - nsqd
+#      - mongo
+#      - mongo-express
+#    restart: always
+#    hostname: mapdeck
+#    ports:
+#      - "8090:8090"
+#    networks:
+#      - mapdeck-network
 
 networks:
   nsq-network:
@@ -92,4 +122,8 @@ networks:
   mongo-network:
     driver: bridge
   taskdash-network:
+    driver: bridge
+  annotator-network:
+    driver: bridge
+  mapdeck-network:
     driver: bridge

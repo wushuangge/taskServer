@@ -8,14 +8,14 @@ IndexPage={
         { id:"Status",		header:["状态",    {content:"selectFilter" }], fillspace:true},
         { id:"CreateTime",  header:["创建时间"],   fillspace:true, format:function(data){return IndexPage.timeStamp2str(data)}, sort:"string"}
     ],
-    menuData:[
+    editorData:[
         { id:"query",   value:"我的任务", icon: "wxi-drag", data:[
             { id: "unfinishTask", value: "未完成任务", icon: "wxi-close"},
             { id: "finishTask",   value: "已完成任务", icon: "wxi-check"}
         ]},
         { id:"receive", value:"任务领取", icon: "wxi-folder"},
     ],
-    adminMenu:[
+    managerMenu:[
         { id:"assign",  value:"任务指派", icon: "wxi-pencil"},
     ],
     show:function(groups){
@@ -42,28 +42,11 @@ IndexPage={
                         width:200,
                         data: this.getMenuData(groups),
                         on:{
+                            onItemDblClick: function(id){
+                                IndexPage.showTask(id)
+                            },
                             onAfterSelect: function(id){
-                                if($$("showTable")){
-                                    $$("showTable").destructor();
-                                    document.getElementById("paging_here_too").innerHTML = ""
-                                }
-                                var username = VarTool.GetCookie("username")
-                                switch(id){
-                                    case "unfinishTask":
-                                        IndexPage.showUnfinishTask(username);
-                                        break;
-                                    case "finishTask":
-                                        IndexPage.showFinishTask(username);
-                                        break;
-                                    case "receive":
-                                        IndexPage.showNoUserTask(username);
-                                        break;
-                                    case "assign":
-                                        IndexPage.assign(username);
-                                        break;
-                                    default:
-                                        break;
-                                }
+                                IndexPage.showTask(id)
                             },
                             onAfterOpen: function(id){
                                 switch(id){
@@ -244,11 +227,6 @@ IndexPage={
             },
         }).show(); 
     },
-    caseNotSensitive:function(value, filter){
-        value = value.toString().toLowerCase();
-        filter = filter.toString().toLowerCase();
-        return value.indexOf(filter) !== -1;
-    },
     timeStamp2str:function(date) {
         date = new Date(date * 1000);
         var y = date.getFullYear();
@@ -265,11 +243,34 @@ IndexPage={
         return y + '-' + m + '-' + d+' '+h+':'+minute+':'+second;
     },
     getMenuData:function(groups){
-        var menuData = this.menuData.concat();
-        if(groups.indexOf("admin") != -1){
-            menuData = menuData.concat(this.adminMenu);
+        var menuData = this.editorData.concat();
+        if(groups.indexOf("manager") != -1){
+            menuData = menuData.concat(this.managerMenu);
         }
         return menuData;
+    },
+    showTask:function(id){
+        if($$("showTable")){
+            $$("showTable").destructor();
+            document.getElementById("paging_here_too").innerHTML = ""
+        }
+        let username = VarTool.GetCookie("username")
+        switch(id){
+            case "unfinishTask":
+                IndexPage.showUnfinishTask(username);
+                break;
+            case "finishTask":
+                IndexPage.showFinishTask(username);
+                break;
+            case "receive":
+                IndexPage.showNoUserTask(username);
+                break;
+            case "assign":
+                IndexPage.assign(username);
+                break;
+            default:
+                break;
+        }
     },
     pagerTemplate:'{common.first()} {common.prev()} {common.pages()} {common.next()} {common.last()}',
     // pagerTemplate:function(data, common){

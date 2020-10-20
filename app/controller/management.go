@@ -11,12 +11,12 @@ import (
 func TaskRegister(data []byte) {
 	taskFromService := _struct.TaskFromService{}
 	err := json.Unmarshal(data, &taskFromService)
-	if err != nil{
+	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	id := getMd5String(taskFromService.ProjectID +
+	id := GetMd5String(taskFromService.ProjectID +
 		taskFromService.InstanceID + taskFromService.TaskID + taskFromService.TaskType)
 
 	filter := bson.M{"_id": id}
@@ -27,10 +27,8 @@ func TaskRegister(data []byte) {
 			{"instance_id", taskFromService.InstanceID},
 			{"task_id", taskFromService.TaskID},
 			{"status", taskFromService.Status},
-			{"time", taskFromService.CreateTime},
 			{"type", taskFromService.TaskType},
 			{"url", taskFromService.URL},
-			{"increment", taskFromService.Increment},
 		}},
 	}
 	mongodb.UpdateManagement(filter, update, true)
@@ -39,19 +37,48 @@ func TaskRegister(data []byte) {
 func UpdateStatus(data []byte) {
 	taskFromService := _struct.TaskFromService{}
 	err := json.Unmarshal(data, &taskFromService)
-	if err != nil{
+	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	id := getMd5String(taskFromService.ProjectID +
+	id := GetMd5String(taskFromService.ProjectID +
 		taskFromService.InstanceID + taskFromService.TaskID + taskFromService.TaskType)
 
-	filter := bson.M{"_id": id}
-	update := bson.D{
-		{"$set", bson.D{
-			{"status", taskFromService.Status},
-		}},
+	if taskFromService.Status == "已完成" {
+		filter := bson.M{"_id": id}
+		res, err := mongodb.QueryConditionManagement2Interface(filter)
+		if err != nil {
+			return
+		}
+		if len(res) == 0 {
+			return
+		}
+		update := bson.D{
+			{"$set", bson.D{
+				{"_id", id},
+				{"project_id", res[0].ProjectID},
+				{"instance_id", res[0].InstanceID},
+				{"task_id", res[0].TaskID},
+				{"status", "已完成"},
+				{"time", res[0].CreateTime},
+				{"type", res[0].TaskType},
+				{"url", res[0].URL},
+				{"user", res[0].User},
+			}},
+		}
+		err = mongodb.DeleteManagement(filter)
+		if err != nil {
+			return
+		}
+		mongodb.UpdateBackup(filter, update, true)
+	} else {
+		filter := bson.M{"_id": id}
+		update := bson.D{
+			{"$set", bson.D{
+				{"status", taskFromService.Status},
+			}},
+		}
+		mongodb.UpdateManagement(filter, update, false)
 	}
-	mongodb.UpdateManagement(filter, update, false)
 }

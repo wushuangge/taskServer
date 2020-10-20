@@ -57,12 +57,14 @@ func InitMongoDB() error {
 		return err
 	}
 
-	task := mongoDB.GetDBByName("task")
+	task := mongoDB.GetDBByName("taskdash")
 	collMap = make(map[string]*Coll)
 
 	collMap["service"] = task.GetCollByName("service")
-	collMap["metadata"] = task.GetCollByName("metadata")
 	collMap["management"] = task.GetCollByName("management")
+	collMap["backup"] = task.GetCollByName("backup")
+	collMap["user"] = task.GetCollByName("user")
+	collMap["group"] = task.GetCollByName("group")
 	return nil
 }
 

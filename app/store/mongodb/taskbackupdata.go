@@ -9,14 +9,14 @@ import (
 )
 
 //insert
-func InsertManagement(document interface{}) error {
-	err := collMap["management"].InsertOne(document)
+func InsertBackup(document interface{}) error {
+	err := collMap["backup"].InsertOne(document)
 	return err
 }
 
 //query all
-func QueryAllManagement() (string, error) {
-	cursor, err := collMap["management"].Find(bson.D{})
+func QueryAllBackup() (string, error) {
+	cursor, err := collMap["backup"].Find(bson.D{})
 	if err != nil {
 		return "", err
 	}
@@ -37,8 +37,8 @@ func QueryAllManagement() (string, error) {
 }
 
 //condition query
-func QueryConditionManagement(filter interface{}) (string, error) {
-	cursor, err := collMap["management"].Find(filter)
+func QueryConditionBackup(filter interface{}) (string, error) {
+	cursor, err := collMap["backup"].Find(filter)
 	if err != nil {
 		return "", err
 	}
@@ -58,32 +58,12 @@ func QueryConditionManagement(filter interface{}) (string, error) {
 	return Interfaces2json(all), nil
 }
 
-func QueryConditionManagement2Interface(filter interface{}) ([]_struct.TaskManagement, error) {
-	var all = make([]_struct.TaskManagement, 0)
-	cursor, err := collMap["management"].Find(filter)
-	if err != nil {
-		return all, err
-	}
-	if err := cursor.Err(); err != nil {
-		return all, err
-	}
-	for cursor.Next(context.Background()) {
-		var taskManagement _struct.TaskManagement
-		err = cursor.Decode(&taskManagement)
-		if err == nil {
-			all = append(all, taskManagement)
-		}
-	}
-	cursor.Close(context.Background())
-	return all, nil
-}
-
-func QueryManagementNum(filter interface{}) (int64, error) {
-	return collMap["management"].CountDocuments(filter)
+func QueryBackupNum(filter interface{}) (int64, error) {
+	return collMap["backup"].CountDocuments(filter)
 }
 
 //page query
-func QueryPagingManagement(limit int64, skip int64, filter interface{}) ([]interface{}, error) {
+func QueryPagingBackup(limit int64, skip int64, filter interface{}) ([]interface{}, error) {
 	ctx, cannel := context.WithTimeout(context.Background(), time.Minute)
 	defer cannel()
 	var findoptions *options.FindOptions
@@ -93,7 +73,7 @@ func QueryPagingManagement(limit int64, skip int64, filter interface{}) ([]inter
 		findoptions.SetSkip(skip)
 	}
 	var all = make([]interface{}, 0)
-	cursor, err := collMap["management"].FindPaging(ctx, filter, findoptions)
+	cursor, err := collMap["backup"].FindPaging(ctx, filter, findoptions)
 	if err != nil {
 		return all, err
 	}
@@ -112,14 +92,8 @@ func QueryPagingManagement(limit int64, skip int64, filter interface{}) ([]inter
 }
 
 //update
-func UpdateManagement(filter interface{}, update interface{}, setUpsert bool) error {
+func UpdateBackup(filter interface{}, update interface{}, setUpsert bool) error {
 	updateOpts := options.Update().SetUpsert(setUpsert)
-	err := collMap["management"].UpdateOne(filter, update, updateOpts)
-	return err
-}
-
-//delete
-func DeleteManagement(filter interface{}) error {
-	err := collMap["management"].DeleteOne(filter)
+	err := collMap["backup"].UpdateOne(filter, update, updateOpts)
 	return err
 }

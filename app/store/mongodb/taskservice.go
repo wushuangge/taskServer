@@ -8,15 +8,15 @@ import (
 )
 
 //insert
-func InsertService(document interface{}) error{
+func InsertService(document interface{}) error {
 	err := collMap["service"].InsertOne(document)
 	return err
 }
 
 //query all
-func QueryAllService() ([]_struct.TaskService, error){
+func QueryAllService() ([]_struct.TaskService, error) {
 	var all = make([]_struct.TaskService, 0)
-	cursor,err := collMap["service"].Find(bson.D{})
+	cursor, err := collMap["service"].Find(bson.D{})
 	if err != nil {
 		return all, err
 	}
@@ -26,7 +26,7 @@ func QueryAllService() ([]_struct.TaskService, error){
 
 	for cursor.Next(context.Background()) {
 		var taskService _struct.TaskService
-		err = cursor.Decode(&taskService);
+		err = cursor.Decode(&taskService)
 		if err == nil {
 			all = append(all, taskService)
 		}
@@ -36,8 +36,8 @@ func QueryAllService() ([]_struct.TaskService, error){
 }
 
 //condition query
-func QueryConditionService(key string, value interface{}) (string, error){
-	cursor,err := collMap["service"].Find(bson.D{{key, value}});
+func QueryConditionService2json(filter interface{}) (string, error) {
+	cursor, err := collMap["service"].Find(filter)
 	if err != nil {
 		return "", err
 	}
@@ -57,9 +57,35 @@ func QueryConditionService(key string, value interface{}) (string, error){
 	return Interfaces2json(all), nil
 }
 
+func QueryConditionService2Struct(filter interface{}) ([]_struct.TaskService, error) {
+	var all = make([]_struct.TaskService, 0)
+	cursor, err := collMap["service"].Find(filter)
+	if err != nil {
+		return all, err
+	}
+	if err := cursor.Err(); err != nil {
+		return all, err
+	}
+	for cursor.Next(context.Background()) {
+		var taskService _struct.TaskService
+		err = cursor.Decode(&taskService)
+		if err == nil {
+			all = append(all, taskService)
+		}
+	}
+	cursor.Close(context.Background())
+	return all, nil
+}
+
 //update
 func UpdateService(filter interface{}, update interface{}, setUpsert bool) error {
 	updateOpts := options.Update().SetUpsert(setUpsert)
 	err := collMap["service"].UpdateOne(filter, update, updateOpts)
+	return err
+}
+
+//delete
+func DeleteService(filter interface{}) error {
+	err := collMap["service"].DeleteOne(filter)
 	return err
 }

@@ -2,7 +2,6 @@ package mongodb
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -17,8 +16,8 @@ func (coll *Coll) Find(filter interface{}) (*mongo.Cursor, error) {
 	return cursor, err
 }
 
-func (coll *Coll) DeleteOne(p primitive.M) error{
-	_, err := coll.collection.DeleteOne(context.Background(), p)
+func (coll *Coll) DeleteOne(filter interface{}) error {
+	_, err := coll.collection.DeleteOne(context.Background(), filter)
 	return err
 }
 
@@ -27,7 +26,11 @@ func (coll *Coll) UpdateOne(filter interface{}, update interface{}, opts *option
 	return err
 }
 
-func (coll *Coll) FindPaging(ctx context.Context,filter interface{}, findoptions *options.FindOptions) (*mongo.Cursor, error) {
+func (coll *Coll) CountDocuments(filter interface{}) (int64, error) {
+	return coll.collection.CountDocuments(context.Background(), filter)
+}
+
+func (coll *Coll) FindPaging(ctx context.Context, filter interface{}, findoptions *options.FindOptions) (*mongo.Cursor, error) {
 	cursor, err := coll.collection.Find(ctx, filter, findoptions)
 	return cursor, err
 }

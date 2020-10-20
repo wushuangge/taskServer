@@ -7,13 +7,14 @@ import (
 	"github.com/go-redis/redis"
 	"taskdash/config"
 )
+
 type RedisClient struct {
 	c *redis.Client
 }
 
 var redisdb *RedisClient
 
-func InitRedis() error{
+func InitRedis() error {
 	redisdb = new(RedisClient)
 	redisdb.c = newLoginRedisClient(100)
 	if redisdb.c == nil {

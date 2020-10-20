@@ -30,7 +30,7 @@ func Interface2json(i interface{}) string {
 	if err != nil {
 		return ""
 	}
-	return (string(jsons))
+	return string(jsons)
 }
 
 func Interfaces2json(i interface{}) string {

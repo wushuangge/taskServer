@@ -15,20 +15,21 @@ func main() {
 	config.InitEnvConf()
 	//初始化日志
 	util.InitLogger()
+	//初始化定时器
+	controller.InitTicker()
 	//初始化mongodb
 	err = mongodb.InitMongoDB()
 	if err != nil {
 		log.Fatal("服务器启动失败:", err.Error())
 		return
 	}
-	//重新加载数据
-	controller.LoadDB()
 	//开启httpserver
 	err = route.StartHttpServer()
 	if err != nil {
 		log.Fatal("服务器启动失败:", err.Error())
 		return
 	}
+	route.LoadGroupsInfo()
 	//开启nsqserver
 	err = route.StartNsqServer()
 	if err != nil {

@@ -1,4 +1,5 @@
 Login = {
+    groups:undefined,
     webixData:{
         view:"form",
         borderless:true,
@@ -51,20 +52,33 @@ Login = {
         }).show();
     },
     login:function(){
-        var frameData = {
+        let groups = this.getGroups();
+
+        if (groups){
+            if ($$("LoginForm")){
+                $$("LoginForm").hide();
+            }
+            IndexPage.show(groups);
+        }else{
+            this.show();
+        }
+    },
+    getGroups:function(){
+        let frameData = {
             "operation":"UserLogin",
             "username":VarTool.GetCookie("username"),
             "password":VarTool.GetCookie("password")
         };
-        var resData = AjaxTool.SendData(frameData,"/rpost/task");
-        if (resData){
-            if ($$("LoginForm")){
-                $$("LoginForm").hide();
-            }
-            IndexPage.show(JSON.parse(resData));
-        }else{
-            this.show();
-        }
+        let resData = AjaxTool.SendData(frameData,"/rpost/task");
+        
+        try{
+            Login.groups = JSON.parse(resData);
+            if (Login.groups.length < 1){
+                Login.groups = ["editor"];
+            } 
+        }catch (e) {}
+
+        return Login.groups;
     },
     reLogin:function(){
         //清除cookie
